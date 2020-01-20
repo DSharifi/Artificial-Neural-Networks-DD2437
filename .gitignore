@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 
-.pdf
-*.
+*.pdf
+
+.DS_STORE
