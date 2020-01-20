@@ -132,3 +132,5 @@ dmypy.json
 *.pdf
 
 .DS_STORE
+*.xml
+*.iml
