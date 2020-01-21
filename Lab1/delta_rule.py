@@ -9,15 +9,22 @@ sigmaB = 0.5
 
 def generateInputMatrix(useBias = True):
     np.random.seed(100)
-    classA1 = np.array(np.random.randint(1, n, n) * np.array([sigmaA + mA[0]] * n))
-    classA2 = np.array(np.random.randint(1, n, n) * np.array([sigmaA + mA[1]] * n))
-    classB1 = np.array(np.random.randint(1, n, n) * np.array([sigmaB + mB[0]] * n))
-    classB2 = np.array(np.random.randint(1, n, n) * np.array([sigmaB + mB[1]] * n))
+    classA1 = np.array(np.random.normal(0,sigmaA,n)*sigmaA + mA[0])
+    classA2 = np.array(np.random.normal(0,sigmaA,n)*sigmaA + mA[1])
+    classB1 = np.array(np.random.normal(0,sigmaB,n)*sigmaB + mB[0])
+    classB2 = np.array(np.random.normal(0,sigmaB,n)*sigmaB + mB[1])
 
-    #classA1 = np.arange(50, (n + 50), 1)
-    #classA2 = np.arange(50, (n + 50), 1)
+
+    #classA1 = np.arange(1, (n + 1), 1)
+    #classA2 = np.arange(1, (n + 1), 1)
     #classB1 = np.arange(-(n + 1), -1, 1)
     #classB2 = np.arange(-(n + 1), -1, 1)
+
+
+    #classA1 = np.array([0])
+    #classA2 = np.array([1])
+    #classB1= np.array([0])
+    #classB2 = np.array([2])
 
     classX = np.array([np.concatenate((classA1, classB1)),np.array([1] * (n * 2))])
     classW = np.random.normal(0, 0.01, classX.shape[0])
@@ -31,9 +38,7 @@ def generateInputMatrix(useBias = True):
     return classX, classT, classW
 
 def plot(a1, a2, b1, b2):
-    plt.ylim(top=100, bottom=-100)
-    plt.xlim(right=100, left=-100)
-
+    plt.ylim(top=10, bottom=-10)
     plt.scatter(a1, a2, color="red")
     plt.scatter(b1, b2, color="blue")
 
@@ -45,40 +50,45 @@ def delta(W, X, T, eta=0.0001):
     @param  eta - Learning rate
     @return - Delta Matrix
     """
-    xt = X.T
-    return eta * (T - W @ X) @ np.transpose(X)  # <-- F2
+    return eta * (T - W @ X) @ np.transpose(X)
+   
 
-def converge_check(old, change, percentage=0.2):
-    for i, d in np.ndenumerate(old):
-        if (np.abs(change[i] / old[i])) > percentage:
-            return False
+def converge_check(old, new, percentage=0.000000000000001):
+    if (np.abs(old-new)/old) > percentage:
+        return False
     return True
 
+
 def sum_square(X,W,T):
-    return np.sum((T - W @ X))
+    return np.sum((T - W @ X)**2)
 
 def delta_learning(X, T, W):
     i = 0
     converged = False
-    while not converged and i < 100:
+    old_error = sum_square(X,W,T)
+
+    while not converged:
         i += 1
         old_W = W
+        print(sum_square(X,old_W,T))
         changeW = delta(old_W, X, T)
-        W = old_W - changeW
-        print(sum_square(X,W,T))
+        W = old_W + changeW
+        old_error = sum_square(X,old_W, T)
+        error = sum_square(X,W,T)
+        if converge_check(old_error, error):
+            return W
+
     if not converged:
         print("NO CONVERGENCE!")
     print(i)
     return W
 
 def plotLine(W):
-    plt.ylim(top=100, bottom=-100)
-    plt.xlim(right=100, left=-100)
-
+    plt.ylim(top=10, bottom=-10)
     x = np.linspace(-100, 100, 200)
-    #b = W[2]
+    #b = W[1]
     y = (W[0]*x + W[1])
-
+    
     #k = -(b / W[1]) / (b / W[0])
     #m = -b / W[1]
     #y = k * x + m
