@@ -55,7 +55,7 @@ def delta(W, X, T, eta=0.0001):
     return eta * (T - W @ X) @ np.transpose(X)
    
 
-def converge_check(old, new, percentage=0.000000000000001):
+def converge_check(old, new, percentage=0.00000000001):
     if (np.abs(old-new)/old) > percentage:
         return False
     return True
