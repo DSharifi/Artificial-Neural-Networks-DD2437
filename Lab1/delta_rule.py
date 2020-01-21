@@ -31,7 +31,6 @@ def generateInputMatrix(useBias=True):
 
     classX = np.array([np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2)), np.array([1] * (n * 2))])
     classW = np.random.normal(0, 0.01, classX.shape[0])
-    print(classW)
     classAT = np.array([1] * n)  # Random ClassA1,ClassA2 -> Eps 1 eller -1
     classBT = np.array([0] * n)  # Random
     classT = np.concatenate(([1] * n, [-1] * n))
@@ -45,7 +44,7 @@ def plot(a1, a2, b1, b2):
     plt.scatter(b1, b2, color="blue")
 
 
-def delta(W, X, T, eta=0.0001):
+def delta(W, X, T, eta=0.001):
     """
     @param  W - Weight matrix
     @param  X - Input matrix
@@ -56,7 +55,7 @@ def delta(W, X, T, eta=0.0001):
     return eta * (T - W @ X) @ np.transpose(X)
 
 
-def converge_check(old, new, percentage=0.00000000001):
+def converge_check(old, new, percentage=0.00000001):
     if (np.abs(old - new) / old) > percentage:
         return False
     return True
@@ -66,39 +65,57 @@ def sum_square(X, W, T):
     return np.sum((T - W @ X) ** 2)
 
 
+def sequential_delta_learning(X, T, W, eta=0.001):
+    i = 0
+    converged = False
+    old_error = sum_square(X, W, T)
+    XT = X.T
+    error_values = []
+    iterations = []
+    while i < 1000:
+        i += 1
+        for j, x in enumerate(X.T):
+            W += eta * ((T[j] - W @ x) * x)
+        error = sum_square(X, W, T)
+        error_values.append(error)
+        iterations.append(i)
+    return W, error_values, iterations
+
+
 def delta_learning(X, T, W):
     i = 0
     converged = False
     old_error = sum_square(X, W, T)
-
+    error_values = []
+    iterations = []
     while not converged:
         i += 1
         old_W = W
-        print(sum_square(X, old_W, T))
         changeW = delta(old_W, X, T)
         W = old_W + changeW
         old_error = sum_square(X, old_W, T)
         error = sum_square(X, W, T)
+        error_values.append(error)
+        iterations.append(i)
         if converge_check(old_error, error):
-            print("---------")
-            print(i)
-            print(W)
-            return W
+            return W, error_values, iterations
 
-    if not converged:
-        print("NO CONVERGENCE!")
-    print("---------")
-    print(i)
-    print(W)
-    return W
+
+def plotIters(errors, iters):
+    plt.ylim(top=200, bottom=-10)
+    plt.plot(iters, errors, color='green', label="Error Rate")
+    plt.legend(loc="upper right")
+    plt.xlabel("Iterations")
+    plt.ylabel("Sum of Squares Error")
+    plt.title("Error rate converges after several iterations")
+    plt.grid()
+    plt.show()
 
 
 def plotLine(W):
-    plt.ylim(top=5, bottom=-5)
+    plt.ylim(top=50, bottom=-10)
     x = np.linspace(-10, 10, 200)
     b = W[2]
-    # y = (W[0]*x + W[1])
-
     k = -(b / W[1]) / (b / W[0])
     m = -b / W[1]
     y = k * x + m
@@ -113,6 +130,8 @@ def plotLine(W):
 
 classX, classT, classW = generateInputMatrix()
 
-W = delta_learning(classX, classT, classW)
+# W, errors, iters = sequential_delta_learning(classX, classT, classW)
+W, errors, iters = delta_learning(classX, classT, classW)
 
 plotLine(W)
+plotIters(errors, iters)
