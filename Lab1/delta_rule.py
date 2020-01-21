@@ -14,9 +14,9 @@ def generateIOWMatrix(useBias=True):
 
 def generateInputMatrix(useBias=True):
     np.random.seed(100)
-    classA1 = np.array(np.random.normal(10, sigmaA, n) * sigmaA + mA[0])
+    classA1 = np.array(np.random.normal(7, sigmaA, n) * sigmaA + mA[0])
     classA2 = np.array(np.random.normal(7, sigmaA, n) * sigmaA + mA[1])
-    classB1 = np.array(np.random.normal(-1, sigmaB, n) * sigmaB + mB[0])
+    classB1 = np.array(np.random.normal(7, sigmaB, n) * sigmaB + mB[0])
     classB2 = np.array(np.random.normal(7, sigmaB, n) * sigmaB + mB[1])
 
     # classA1 = np.arange(1, (n + 1), 1)
@@ -41,7 +41,6 @@ def generateInputMatrix(useBias=True):
 
 
 def plot(a1, a2, b1, b2):
-    plt.ylim(top=10, bottom=-10)
     plt.scatter(a1, a2, color="red")
     plt.scatter(b1, b2, color="blue")
 
@@ -81,11 +80,16 @@ def delta_learning(X, T, W):
         old_error = sum_square(X, old_W, T)
         error = sum_square(X, W, T)
         if converge_check(old_error, error):
+            print("---------")
+            print(i)
+            print(W)
             return W
 
     if not converged:
         print("NO CONVERGENCE!")
+    print("---------")
     print(i)
+    print(W)
     return W
 
 
