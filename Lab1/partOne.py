@@ -2,22 +2,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 n = 100
-mA = [2.0, 1.0]
-mB = [-2.0, -1.0]
-sigmaA = 0.1
-sigmaB = 0.1
+mA = [1.0, 0.7]
+mB = [-1.0, -0.5]
+sigmaA = 0.5
+sigmaB = 0.5
 
 
 def generateInputMatrix():
+    np.random.seed(100)
     classA1 = np.array(np.random.randint(0, n, n) * np.array([sigmaA + mA[0]] * n))
     classA2 = np.array(np.random.randint(0, n, n) * np.array([sigmaA + mA[1]] * n))
-
     classB1 = np.array(np.random.randint(0, n, n) * np.array([sigmaB + mB[0]] * n))
     classB2 = np.array(np.random.randint(0, n, n) * np.array([sigmaB + mB[1]] * n))
 
+    #classA1 = np.arange(50, (n + 50), 1)
+    #classA2 = np.arange(50, (n + 50), 1)
+    #classB1 = np.arange(-(n + 1), -1, 1)
+    #classB2 = np.arange(-(n + 1), -1, 1)
+    print(classA1.shape)
+    print(classB1.shape)
     classX = np.array([np.array([1] * (n * 2)), np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2))])
     classW = np.random.normal(0, 0.01, classX.shape[0])
-    print(classW)
+
     classAT = np.array([1] * n)
     classBT = np.array([-1] * n)
     classT = np.concatenate((classAT, classBT))
@@ -80,11 +86,11 @@ def plotLine(W):
     plt.ylim(top=100, bottom=-100)
     x = np.linspace(-100, 100, 200)
     b = W[0]
-    y = (W[1]*x + W[2])
+    # y = (W[1]*x + W[2])
 
-    #k = -(b / W[2]) / (b / W[1])
-    #m = -b/W[2]
-    #y = k*x +m
+    k = -(b / W[2]) / (b / W[1])
+    m = -b / W[2]
+    y = k * x + m
     plt.plot(x, y, color='green', label="Decision Boundary")
     plt.legend(loc="upper right")
     plt.xlabel("X-feature")
