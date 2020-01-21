@@ -7,6 +7,9 @@ mB = [-1.0, 0.0]
 sigmaA = 0.5
 sigmaB = 0.5
 
+def generateIOWMatrix(useBias = True):
+    return
+
 def generateInputMatrix(useBias = True):
     np.random.seed(100)
     classA1 = np.array(np.random.normal(0,sigmaA,n)*sigmaA + mA[0])
@@ -26,15 +29,14 @@ def generateInputMatrix(useBias = True):
     #classB1= np.array([0])
     #classB2 = np.array([2])
 
-    classX = np.array([np.concatenate((classA1, classB1)),np.array([1] * (n * 2))])
+    classX = np.array([np.concatenate((classA1, classB1)),np.concatenate((classA2, classB2)), np.array([1] * (n * 2))])
     classW = np.random.normal(0, 0.01, classX.shape[0])
-
+    print(classW)
     classAT = np.array([1] * n)#Random ClassA1,ClassA2 -> Eps 1 eller -1
-    classBT = np.array([-1] * n)#Random
-    classT = np.concatenate((classA2, classB2))
+    classBT = np.array([0] * n)#Random
+    classT = np.concatenate(([1]*n, [-1]*n))
 
     plot(classA1, classA2, classB1, classB2)
-
     return classX, classT, classW
 
 def plot(a1, a2, b1, b2):
@@ -86,12 +88,12 @@ def delta_learning(X, T, W):
 def plotLine(W):
     plt.ylim(top=10, bottom=-10)
     x = np.linspace(-100, 100, 200)
-    #b = W[1]
-    y = (W[0]*x + W[1])
+    b = W[1]
+    #y = (W[0]*x + W[1])
     
-    #k = -(b / W[1]) / (b / W[0])
-    #m = -b / W[1]
-    #y = k * x + m
+    k = -(b / W[1]) / (b / W[0])
+    m = -b / W[1]
+    y = k * x + m
     plt.plot(x, y, color='green', label="Decision Boundary")
     plt.legend(loc="upper right")
     plt.xlabel("X-feature")
@@ -104,4 +106,4 @@ classX, classT, classW = generateInputMatrix()
 
 W = delta_learning(classX, classT, classW)
 
-plotLine(W)
+#plotLine(W)
