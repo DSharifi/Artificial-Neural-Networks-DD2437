@@ -67,9 +67,6 @@ def sum_square(X, W, T):
 
 def sequential_delta_learning(X, T, W, eta=0.001):
     i = 0
-    converged = False
-    old_error = sum_square(X, W, T)
-    XT = X.T
     error_values = []
     iterations = []
     while i < 1000:
