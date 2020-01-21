@@ -2,26 +2,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 n = 100
-mA = [1.0, 0.7]
-mB = [-1.0, -0.5]
+mA = [1.0, 0.5]
+mB = [-1.0, 0.0]
 sigmaA = 0.5
 sigmaB = 0.5
 
 
-def generateInputMatrix():
+def generateInputMatrix(useBias = True):
     np.random.seed(100)
-    classA1 = np.array(np.random.randint(0, n, n) * np.array([sigmaA + mA[0]] * n))
-    classA2 = np.array(np.random.randint(0, n, n) * np.array([sigmaA + mA[1]] * n))
-    classB1 = np.array(np.random.randint(0, n, n) * np.array([sigmaB + mB[0]] * n))
-    classB2 = np.array(np.random.randint(0, n, n) * np.array([sigmaB + mB[1]] * n))
+    classA1 = np.array(np.random.randint(1, n, n) * np.array([sigmaA + mA[0]] * n))
+    classA2 = np.array(np.random.randint(1, n, n) * np.array([sigmaA + mA[1]] * n))
+    classB1 = np.array(np.random.randint(1, n, n) * np.array([sigmaB + mB[0]] * n))
+    classB2 = np.array(np.random.randint(1, n, n) * np.array([sigmaB + mB[1]] * n))
 
     #classA1 = np.arange(50, (n + 50), 1)
     #classA2 = np.arange(50, (n + 50), 1)
     #classB1 = np.arange(-(n + 1), -1, 1)
     #classB2 = np.arange(-(n + 1), -1, 1)
-    print(classA1.shape)
-    print(classB1.shape)
-    classX = np.array([np.array([1] * (n * 2)), np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2))])
+
+    classX = np.array([np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2)),np.array([1] * (n * 2))])
     classW = np.random.normal(0, 0.01, classX.shape[0])
 
     classAT = np.array([1] * n)
@@ -34,6 +33,9 @@ def generateInputMatrix():
 
 
 def plot(a1, a2, b1, b2):
+    plt.ylim(top=100, bottom=-100)
+    plt.xlim(right=100, left=-100)
+
     plt.scatter(a1, a2, color="red")
     plt.scatter(b1, b2, color="blue")
 
@@ -55,7 +57,8 @@ def converge_check(old, change, percentage=0.2):
         if (np.abs(change[i] / old[i])) > percentage:
             return False
     return True
-
+def sum_square(X,W,T):
+    return np.sum((T - W @ X))
 
 def delta_learning(X, T, W):
     i = 0
@@ -65,31 +68,22 @@ def delta_learning(X, T, W):
         old_W = W
         changeW = delta(old_W, X, T)
         W = old_W - changeW
-        print(W)
-        # if np.isnan[W[0]] or np.isnan(W[1]):
-        # return old_W
-
-        if converge_check(old_W, changeW):
-            converged = True
+        print(sum_square(X,W,T))
     if not converged:
         print("NO CONVERGENCE!")
     print(i)
     return W
 
-
-classX, classT, classW = generateInputMatrix()
-
-W = delta_learning(classX, classT, classW)
-
-
 def plotLine(W):
     plt.ylim(top=100, bottom=-100)
+    plt.xlim(right=100, left=-100)
+
     x = np.linspace(-100, 100, 200)
-    b = W[0]
+    b = W[2]
     # y = (W[1]*x + W[2])
 
-    k = -(b / W[2]) / (b / W[1])
-    m = -b / W[2]
+    k = -(b / W[1]) / (b / W[0])
+    m = -b / W[1]
     y = k * x + m
     plt.plot(x, y, color='green', label="Decision Boundary")
     plt.legend(loc="upper right")
@@ -99,5 +93,8 @@ def plotLine(W):
     plt.grid()
     plt.show()
 
+classX, classT, classW = generateInputMatrix()
+
+W = delta_learning(classX, classT, classW)
 
 plotLine(W)
