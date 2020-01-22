@@ -6,7 +6,7 @@ mA = [1.0, 0.5]
 mB = [-1.0, 0.0]
 sigmaA = 0.5
 sigmaB = 0.5
-
+eta = 0.0001
 
 def generateIOWMatrix(useBias=True):
     return
@@ -14,10 +14,10 @@ def generateIOWMatrix(useBias=True):
 
 def generateInputMatrix(useBias=True):
     np.random.seed(100)
-    classA1 = np.array(np.random.normal(7, sigmaA, n) * sigmaA + mA[0])
-    classA2 = np.array(np.random.normal(7, sigmaA, n) * sigmaA + mA[1])
+    classA1 = np.array(np.random.normal(2, sigmaA, n) * sigmaA + mA[0])
+    classA2 = np.array(np.random.normal(3, sigmaA, n) * sigmaA + mA[1])
     classB1 = np.array(np.random.normal(7, sigmaB, n) * sigmaB + mB[0])
-    classB2 = np.array(np.random.normal(7, sigmaB, n) * sigmaB + mB[1])
+    classB2 = np.array(np.random.normal(8, sigmaB, n) * sigmaB + mB[1])
 
     # classA1 = np.arange(1, (n + 1), 1)
     # classA2 = np.arange(1, (n + 1), 1)
@@ -44,7 +44,7 @@ def plot(a1, a2, b1, b2):
     plt.scatter(b1, b2, color="blue")
 
 
-def delta(W, X, T, eta=0.001):
+def delta(W, X, T):
     """
     @param  W - Weight matrix
     @param  X - Input matrix
@@ -55,28 +55,33 @@ def delta(W, X, T, eta=0.001):
     return eta * (T - W @ X) @ np.transpose(X)
 
 
-def converge_check(old, new, percentage=0.00000001):
+def converge_check(old, new, percentage=0.00001):
     if (np.abs(old - new) / old) > percentage:
         return False
     return True
 
 
 def sum_square(X, W, T):
-    return np.sum((T - W @ X) ** 2)
+    return np.sum((T - W @ X) ** 2)/2
 
 
-def sequential_delta_learning(X, T, W, eta=0.001):
+def sequential_delta_learning(X, T, W):
     i = 0
     error_values = []
     iterations = []
-    while i < 1000:
+    while True:
         i += 1
+        old_W = W
+        old_error = sum_square(X, old_W, T)
+        print(old_error)
         for j, x in enumerate(X.T):
             W += eta * ((T[j] - W @ x) * x)
         error = sum_square(X, W, T)
         error_values.append(error)
-        iterations.append(i)
-    return W, error_values, iterations
+        iterations.append(i*n*2)
+        if converge_check(old_error, error):
+            print(W)
+            return W, error_values, iterations
 
 
 def delta_learning(X, T, W):
@@ -91,15 +96,17 @@ def delta_learning(X, T, W):
         changeW = delta(old_W, X, T)
         W = old_W + changeW
         old_error = sum_square(X, old_W, T)
+        print(old_error)
         error = sum_square(X, W, T)
         error_values.append(error)
         iterations.append(i)
         if converge_check(old_error, error):
+            print(W)
             return W, error_values, iterations
 
 
 def plotIters(errors, iters):
-    plt.ylim(top=200, bottom=-10)
+    plt.ylim(top=100, bottom=-10)
     plt.plot(iters, errors, color='green', label="Error Rate")
     plt.legend(loc="upper right")
     plt.xlabel("Iterations")
@@ -120,7 +127,7 @@ def plotLine(W):
     plt.legend(loc="upper right")
     plt.xlabel("X-feature")
     plt.ylabel("Y-feature")
-    plt.title("Delta Rule for two linearly seperable datasets")
+    plt.title("Delta Rule for two linearly seperable datasets, eta = " + str(eta))
     plt.grid()
     plt.show()
 
