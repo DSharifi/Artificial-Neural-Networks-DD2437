@@ -2,29 +2,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 n = 100
-mA = [1.0, 0.5]
-mB = [-1.0, 0.0]
-sigmaA = 0.5
-sigmaB = 0.5
-eta = 0.0001
+mA = [1.0, 0.3]
+mB = [0.0, -0.1]
+sigmaA = 0.2
+sigmaB = 0.3
+eta = 0.001
+ratioA = 0.0
+ratioB = 0.5
 
 
 def generateInputMatrix(useBias=True):
     np.random.seed(100)
-    classA1 = np.array(np.random.normal(2, sigmaA, n) * sigmaA + mA[0])
+    classA1 = np.array(np.concatenate((np.random.normal(2, sigmaA, int(n / 2)) * sigmaA - mA[0],
+                                       np.random.normal(2, sigmaA, int(n / 2)) * sigmaA + mA[0])))
+
+    np.random.shuffle(classA1)
     classA2 = np.array(np.random.normal(2, sigmaA, n) * sigmaA + mA[1])
     classB1 = np.array(np.random.normal(2, sigmaB, n) * sigmaB + mB[0])
     classB2 = np.array(np.random.normal(2, sigmaB, n) * sigmaB + mB[1])
 
     if useBias:
-        classX = np.array([np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2)), np.array([1] * (n * 2))])
+        classX = np.array(
+            [np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2)), np.array([1] * (n * 2))])
     else:
         classX = np.array([np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2))])
 
     classW = np.random.normal(0, 5, classX.shape[0])
     classT = np.concatenate(([1] * n, [-1] * n))
+    # plot(testA, testAT, testB, testBT)
 
-    plot(classA1, classA2, classB1, classB2)
     return classX, classT, classW
 
 
@@ -44,7 +50,7 @@ def delta(W, X, T):
     return eta * (T - W @ X) @ np.transpose(X)
 
 
-def converge_check(old, new, percentage=0.00001):
+def converge_check(old, new, percentage=0.0000001):
     if (np.abs(old - new) / old) > percentage:
         return False
     return True
@@ -112,7 +118,7 @@ def plotLine(W, bias=True):
         m = -b / W[1]
         y = k * x + m
     else:
-        k = (W[0])/W[1]
+        k = (W[0]) / W[1]
         y = k * x
 
     plt.plot(x, y, color='green', label="Decision Boundary")
@@ -124,10 +130,42 @@ def plotLine(W, bias=True):
     plt.show()
 
 
+def splitData(InputData, TargetData, A_Ratio=0.0, B_Ratio=0.0):
+
+    testA = InputData[:, :int(n * A_Ratio)]
+    trainingA = InputData[:, int(n * A_Ratio):n]
+    testB = InputData[:, n: n + int((B_Ratio * n))]
+    trainingB = InputData[:, n + int((B_Ratio * n)): n * 2]
+
+    testAT = TargetData[0:int(A_Ratio * n):1]
+    trainingAT = TargetData[int(A_Ratio * n):n:1]
+    testBT = TargetData[n:n + int(B_Ratio * n):1]
+    trainingBT = TargetData[n + int(B_Ratio * n):2 * n:1]
+
+    if B_Ratio == 0:
+        testX = testA
+        testT = testAT
+    elif A_Ratio == 0:
+        testX = testB
+        testT = testBT
+    else:
+        testX = np.concatenate((testA, testB))
+        testT = np.concatenate((testAT, testBT))
+
+    trainingX = np.concatenate((trainingA, trainingB), axis=1)
+    trainingT = np.concatenate((trainingAT, trainingBT))
+
+    plot(testA[0], testA[1], testB[0], testB[1])
+
+    return trainingX, trainingT
+    # print(testA.shape)
+
+
 classX, classT, classW = generateInputMatrix()
 
+trainingX, trainingT = splitData(classX, classT, ratioA, ratioB)
+W, errors, iters = delta_learning(trainingX, trainingT, classW)
 # W, errors, iters = sequential_delta_learning(classX, classT, classW)
-W, errors, iters = delta_learning(classX, classT, classW)
 
 plotLine(W)
-plotIters(errors, iters)
+# plotIters(errors, iters)
