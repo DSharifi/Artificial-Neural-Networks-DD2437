@@ -2,19 +2,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #NETWORK SETTINGS
-n_epochs = 10000
-hidden_nodes = 1
+n_epochs = 50000
+hidden_nodes = 2
 features = 2 #input_nodes
-eta= 0.01
+eta= 1
 output_nodes = 1
 
 #DATA STRUCTURE
-mA = [1.0, 0.3]
-mB = [0.0, -0.1]
-sigmaA = 0.2
-sigmaB = 0.3
+mA = [1.0, 0.5]
+mB = [0.2, 0.3]
+sigmaA = 0.1
+sigmaB = 0.1
 data_points = 100
 n_classes = 2
+
+
 
 #WEIGHT
 
@@ -33,10 +35,11 @@ def generate_io_matrix(useBias = True):
     X = np.zeros([features+1, data_points*2])
     
     #A
-    X[0, :data_points] = np.random.normal(0, 1, data_points) * sigmaA + mA[0]
+    X[0, :data_points] = np.concatenate((np.random.normal(2, 1, int(data_points / 2)) * sigmaA - mA[0],
+                                       np.random.normal(2, 1, int(data_points / 2)) * sigmaA + mA[0]))
     X[1, :data_points] = np.random.normal(0, 1, data_points) * sigmaA + mA[1]
     X[2, :data_points] = 1 if useBias else 0
-    
+
     #B
     X[0, data_points:] = np.random.normal(0, 1, data_points) * sigmaB + mB[0]
     X[1, data_points:] = np.random.normal(0, 1, data_points) * sigmaB + mB[1]
@@ -94,11 +97,7 @@ def delta_V(delta_o, H, use_momentum=False, dv=0,alpha=0.9):
 def weight_update(delta_h, delta_o, X, W, H, V, use_momentum = False, dw = 0, dv = 0):
     if not use_momentum:
         dw = delta_W(delta_h, X)
-        #print("-----dw----")
         dv = delta_V(delta_o, H)
-        #print(np.shape(dw))
-        #print("-----W----")
-        #print(np.shape(W))
         W += dw
         V += dv
         return W, V, dw, dv
@@ -109,14 +108,27 @@ def weight_update(delta_h, delta_o, X, W, H, V, use_momentum = False, dw = 0, dv
         V += dv
         return W, V, dw, dv
 
+def calculate_accuracy(o_out):
+    counter = 0 
+    for i in range(0, data_points,1):
+        if o_out[0, i] <= 0:
+            counter += 1
+    for i in range(data_points, data_points*2,1):
+        if o_out[0, i] > 0:
+            counter += 1
+    if counter == 0:
+        return 1.0
+    else:
+        return (data_points*2-counter)/(data_points*2)
+
 def two_layer_perceptron(X, T, W, V, n_epoch):
     mse = np.zeros(n_epoch)
     for i in range(n_epoch):
         o_out, h_out = forward_pass(X, W, V)
         delta_h, delta_o = backward_pass(o_out, h_out, T, V)
-        W, V, dw, dv =  weight_update(delta_h,delta_o,X,W,h_out, V)
+        W, V, dw, dv =  weight_update(delta_h,delta_o, X, W, h_out, V)
         mse[i] = MSE(T, o_out)
-        print(mse[i])
+        #print(mse[i])
 
     
     return W, V, dw, dv, o_out, h_out, mse
@@ -131,7 +143,7 @@ def plot_data_points(X):
     plt.scatter(classAx, classAy, color="red")
     plt.scatter(classBx, classBy, color="blue")
     plt.grid()
-    plt.show()
+    #plt.show()
 
 def plot_mse(mse_array):
     plt.ylim(top=0.5, bottom=0)
@@ -146,18 +158,40 @@ def plot_mse(mse_array):
     plt.show()
 
 
+
+def plotLine(W, bias=True):
+    plt.ylim(top=50, bottom=-10)
+    y = []
+    x = np.linspace(-100, 100, 200)
+    if bias:
+        b = W[2]
+        k = -(b / W[1]) / (b / W[0])
+        m = -b / W[1]
+        y = k * x + m
+        #y = (W[0]*x+W[2])/W[1]
+    else:
+        k = (W[0]) / W[1]
+        y = k * x
+    plt.plot(x, y, color='green', label="Decision Boundary")
+
 """ Code here """
 X, T = generate_io_matrix()
 W, V = generate_weights()
 W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X,T,W,V,n_epochs)
-
-#print(mse_array)
-#print("-------------- O ---------------- ")
-#print(o_out)
+print("Accuracy" + str(calculate_accuracy(o_out)))
 #print("H")
 #print(h_out)
 #print("TARGET")
 #print(T)
-#plot_data_points(X)
-plot_mse(mse_array)
+print(W)
+plot_data_points(X)
+for w in W:
+    plotLine(w)
+
+plt.grid()
+plt.show()
+
+
+
+#plot_mse(mse_array)
 
