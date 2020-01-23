@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #NETWORK SETTINGS
-n_epochs = 50000
+n_epochs = 10000
 hidden_nodes = 2
 features = 2 #input_nodes
-eta= 1
+eta= 0.1
 output_nodes = 1
 
 #DATA STRUCTURE
@@ -14,11 +14,9 @@ mB = [0.2, 0.3]
 sigmaA = 0.1
 sigmaB = 0.1
 data_points = 100
+A_Ratio = 0.5
+B_Ratio = 0.0
 n_classes = 2
-
-
-
-#WEIGHT
 
 
 def generate_weights():
@@ -50,7 +48,11 @@ def generate_io_matrix(useBias = True):
     T[:data_points] = 1
     T[data_points:] = -1
     T = phi(T)
+
+
     
+    np.random.shuffle(X[0, :data_points])
+
     return X, T
 
 
@@ -110,16 +112,16 @@ def weight_update(delta_h, delta_o, X, W, H, V, use_momentum = False, dw = 0, dv
 
 def calculate_accuracy(o_out):
     counter = 0 
-    for i in range(0, data_points,1):
+    for i in range(0, int(data_points*A_Ratio),1):
         if o_out[0, i] <= 0:
             counter += 1
-    for i in range(data_points, data_points*2,1):
+    for i in range(int(data_points*A_Ratio), int(data_points*A_Ratio + data_points*B_Ratio),1):
         if o_out[0, i] > 0:
             counter += 1
     if counter == 0:
         return 1.0
     else:
-        return (data_points*2-counter)/(data_points*2)
+        return 1- (counter)/(data_points*A_Ratio + data_points*B_Ratio)
 
 def two_layer_perceptron(X, T, W, V, n_epoch):
     mse = np.zeros(n_epoch)
@@ -134,16 +136,47 @@ def two_layer_perceptron(X, T, W, V, n_epoch):
     return W, V, dw, dv, o_out, h_out, mse
 
 def plot_data_points(X):
+    #print(X.shape)
     plt.ylim(top=100, bottom=-100)
     plt.xlim(right=100, left=-100)
-    classAx = X[0, :data_points]
-    classAy = X[1, :data_points]
-    classBx = X[0, data_points:]
-    classBy = X[1, data_points:]
+    classAx = X[0, :int(data_points*A_Ratio)]
+    classAy = X[1, :int(data_points*A_Ratio)]
+    classBx = X[0, int(data_points*A_Ratio):]
+    classBy = X[1, int(data_points*A_Ratio):]
     plt.scatter(classAx, classAy, color="red")
     plt.scatter(classBx, classBy, color="blue")
     plt.grid()
     #plt.show()
+
+def split_data(InputData, TargetData, A_Ratio=0.0, B_Ratio=0.0):
+
+    testA = InputData[:, :int(data_points * A_Ratio)]
+    trainingA = InputData[:, int(data_points * A_Ratio):data_points]
+    testB = InputData[:, data_points: data_points + int((B_Ratio * data_points))]
+    trainingB = InputData[:, data_points + int((B_Ratio * data_points)): data_points * 2]
+
+    testAT = TargetData[0:int(A_Ratio * data_points):1]
+    trainingAT = TargetData[int(A_Ratio * data_points):data_points:1]
+    testBT = TargetData[data_points:data_points + int(B_Ratio * data_points):1]
+    trainingBT = TargetData[data_points + int(B_Ratio * data_points):2 * data_points:1]
+
+    if B_Ratio == 0:
+        testX = testA
+        testT = testAT
+    elif A_Ratio == 0:
+        testX = testB
+        testT = testBT
+    else:
+        testX = np.concatenate((testA, testB), axis=1)
+        testT = np.concatenate((testAT, testBT))
+
+    trainingX = np.concatenate((trainingA, trainingB), axis=1)
+    trainingT = np.concatenate((trainingAT, trainingBT))
+
+
+    plot_data_points(testX)
+
+    return trainingX, trainingT, testX, testT
 
 def plot_mse(mse_array):
     plt.ylim(top=0.5, bottom=0)
@@ -156,8 +189,6 @@ def plot_mse(mse_array):
     plt.plot(x, y, color='green', label="Mean Square Error")
     plt.legend(loc="upper right")
     plt.show()
-
-
 
 def plotLine(W, bias=True):
     plt.ylim(top=50, bottom=-10)
@@ -177,18 +208,25 @@ def plotLine(W, bias=True):
 """ Code here """
 X, T = generate_io_matrix()
 W, V = generate_weights()
-W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X,T,W,V,n_epochs)
-print("Accuracy" + str(calculate_accuracy(o_out)))
+trainX, trainT, testX, testT = split_data(X,T, A_Ratio, B_Ratio)
+W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(trainX,trainT,W,V,n_epochs)
+
+
+#print("Accuracy" + str(calculate_accuracy(o_out)))
 #print("H")
 #print(h_out)
 #print("TARGET")
 #print(T)
-print(W)
-plot_data_points(X)
+#print(W)
+#plot_data_points(X)
 for w in W:
     plotLine(w)
 
 plt.grid()
+plt.title("Two Layer Percetron \nHidden Nodes: " + str(hidden_nodes) +  ", A-Ratio: " + str(A_Ratio) + ", B-Ratio: " + str(B_Ratio) + ", Accuracy: " + str(calculate_accuracy(o_out)))
+plt.legend(loc="upper right")
+plt.xlabel("X1-feature")
+plt.ylabel("X2-feature")
 plt.show()
 
 
