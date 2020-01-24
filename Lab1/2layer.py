@@ -2,17 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # NETWORK SETTINGS
-n_epochs = 1000
+n_epochs = 10
 hidden_nodes = 3
 features = 8  # input_nodes
-eta = 0.01
+eta = 0.001
 output_nodes = 8
 
 # DATA STRUCTURE
-mA = [1.0, 0.5]
-mB = [0.2, 0.3]
-sigmaA = 0.1
-sigmaB = 0.1
+mA = [1.0, 0.3]
+mB = [0.0, -0.1]
+sigmaA = 0.2
+sigmaB = 0.3
 data_points = 100
 n_classes = 2
 
@@ -30,19 +30,19 @@ def generate_weights():
 
 
 def generate_io_matrix(useBias=True):
-    # np.random.seed(1000)
+    np.random.seed(1000)
 
     X = np.zeros([features + 1, data_points * 2])
 
     # A
-    X[0, :data_points] = np.concatenate((np.random.normal(2, 1, int(data_points / 2)) * sigmaA - mA[0],
-                                         np.random.normal(2, 1, int(data_points / 2)) * sigmaA + mA[0]))
+    X[0, :data_points] = np.concatenate((np.random.normal(2, sigmaA, int(data_points / 2)) * sigmaA - mA[0],
+                                         np.random.normal(2, sigmaA, int(data_points / 2)) * sigmaA + mA[0]))
     X[1, :data_points] = np.random.normal(0, 1, data_points) * sigmaA + mA[1]
     X[2, :data_points] = 1 if useBias else 0
 
     # B
-    X[0, data_points:] = np.random.normal(0, 1, data_points) * sigmaB + mB[0]
-    X[1, data_points:] = np.random.normal(0, 1, data_points) * sigmaB + mB[1]
+    X[0, data_points:] = np.random.normal(2, sigmaB, data_points) * sigmaB + mB[0]
+    X[1, data_points:] = np.random.normal(2, sigmaB, data_points) * sigmaB + mB[1]
     X[2, data_points:] = 1 if useBias else 0
 
     # T
@@ -50,7 +50,7 @@ def generate_io_matrix(useBias=True):
     T[:data_points] = 1
     T[data_points:] = -1
     T = phi(T)
-    return X, T
+    return X, T.shape
 
 
 def generate_io_encoder_matrix():
@@ -58,7 +58,7 @@ def generate_io_encoder_matrix():
     X = np.ones([data_points, features]) * -1
     for i, x in enumerate(X):
         x[rand[i]] = 1
-    return X.T
+    return X
 
 
 def MSE(T, y):
@@ -123,6 +123,19 @@ def weight_update(delta_h, delta_o, X, W, H, V, use_momentum=False, dw=0, dv=0):
         return W, V, dw, dv
 
 
+def calculate_accuracy_encoder(o_out, T):
+    out = np.sign(o_out)
+    t = np.sign(T)
+    counter = 0
+    print(T.shape)
+    print(out.shape)
+    print(T[0])
+    for i, o in enumerate(out):
+        # print(T)
+        if np.array_equal(o, t[i]):
+            counter += 1
+
+
 def calculate_accuracy(o_out):
     counter = 0
     for i in range(0, data_points, 1):
@@ -180,11 +193,11 @@ def plotLine(W, bias=True):
     y = []
     x = np.linspace(-100, 100, 200)
     if bias:
-        b = W[2]
-        k = -(b / W[1]) / (b / W[0])
-        m = -b / W[1]
-        y = k * x + m
-        # y = (W[0]*x+W[2])/W[1]
+        # b = W[2]
+        # k = -(b / W[1]) / (b / W[0])
+        # m = -b / W[1]
+        # y = k * x + m
+        y = (W[0] * x + W[2]) / W[1]
     else:
         k = (W[0]) / W[1]
         y = k * x
@@ -197,18 +210,19 @@ T = phi(X)
 # X, T = generate_io_matrix()
 W, V = generate_weights()
 W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X, T, W, V, n_epochs)
-print(W)
-#print("Accuracy" + str(calculate_accuracy(o_out)))
+# print(W)
+# print("Accuracy" + str(calculate_accuracy(o_out)))
+print(str(calculate_accuracy_encoder(o_out, T)))
 # print("H")
 # print(h_out)
 # print("TARGET")
 # print(T)
 # print(W)
-#plot_data_points(X)
-#for w in W:
+# plot_data_points(X)
+# for w in W:
 #    plotLine(w)
 
-#plt.grid()
-#plt.show()
+# plt.grid()
+# plt.show()
 
 plot_mse(mse_array)
