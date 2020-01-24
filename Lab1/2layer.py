@@ -1,14 +1,15 @@
+from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
 
 # NETWORK SETTINGS
-n_epochs = 1000
-hidden_nodes = 3
-features = 8  # input_nodes
-eta = 0.01
-output_nodes = 8
+n_epochs = 100
+hidden_nodes = 5
+features = 8  # input_nodes, for 3.2.1-3.2.2
+eta = 0.1
+output_nodes = 1
 
-# DATA STRUCTURE
+# DATA generation for 3.2.1
 mA = [1.0, 0.5]
 mB = [0.2, 0.3]
 sigmaA = 0.1
@@ -20,7 +21,7 @@ n_classes = 2
 # WEIGHT
 
 
-def generate_weights():
+def generate_weights(X):
     # Weight, W
     W = np.random.normal(0, 0.001, (hidden_nodes, X.shape[0]))
 
@@ -58,8 +59,22 @@ def generate_io_encoder_matrix():
     X = np.ones([data_points, features]) * -1
     for i, x in enumerate(X):
         x[rand[i]] = 1
+    print(X)
     return X.T
 
+def generate_bell_data():
+    x = np.reshape(np.arange(-5, 5, 0.5), (20, 1))
+    y = np.reshape(np.arange(-5, 5, 0.5), (20, 1))
+    z = np.exp(-x * x * 0.1) * np.exp(-y * y * 0.1).T - 0.5
+    ndata = x.shape[0]*y.shape[0]
+    T = np.reshape(z, (1, ndata))
+    xx, yy = np.meshgrid(x, y)
+    X = np.vstack((np.reshape(xx, (1, ndata)), np.reshape(yy, (1, ndata))))
+    return x, y, X, T
+
+
+def gauss_bell_function(x, y):
+    return np.exp(-(x**2 + y**2)/10) - 0.5
 
 def MSE(T, y):
     return np.square(np.subtract(T, y)).mean()
@@ -137,12 +152,17 @@ def calculate_accuracy(o_out):
         return (data_points * 2 - counter) / (data_points * 2)
 
 
-def two_layer_perceptron(X, T, W, V, n_epoch):
+def two_layer_perceptron(X, T, W, V, n_epoch, use_momentum=False):
     mse = np.zeros(n_epoch)
+    dw = 0
+    dv = 0
     for i in range(n_epoch):
         o_out, h_out = forward_pass(X, W, V)
         delta_h, delta_o = backward_pass(o_out, h_out, T, V)
-        W, V, dw, dv = weight_update(delta_h, delta_o, X, W, h_out, V)
+        if not use_momentum:
+            W, V, dw, dv = weight_update(delta_h, delta_o, X, W, h_out, V)
+        else:
+            W, V, dw, dv = weight_update(delta_h, delta_o, X, W, h_out, V, True, dw, dv)
         mse[i] = MSE(T, o_out)
         # print(mse[i])
 
@@ -159,7 +179,7 @@ def plot_data_points(X):
     plt.scatter(classAx, classAy, color="red")
     plt.scatter(classBx, classBy, color="blue")
     plt.grid()
-    # plt.show()
+    #plt.show()
 
 
 def plot_mse(mse_array):
@@ -179,6 +199,7 @@ def plotLine(W, bias=True):
     plt.ylim(top=50, bottom=-10)
     y = []
     x = np.linspace(-100, 100, 200)
+    #Tror line ska vara det här: y = (W[2] - W[0]*x)/W[1]
     if bias:
         b = W[2]
         k = -(b / W[1]) / (b / W[0])
@@ -190,25 +211,53 @@ def plotLine(W, bias=True):
         y = k * x
     plt.plot(x, y, color='green', label="Decision Boundary")
 
+def plot_bell(output, x, y):
+    xx, yy = np.meshgrid(x, y)
+    zz = np.reshape(output, xx.shape)
+    plt.axis([-5, 5, -5, 5])
+    plt.contourf(xx, yy, zz)
+    plt.show()
 
-""" Code here """
-X = generate_io_encoder_matrix()
-T = phi(X)
-# X, T = generate_io_matrix()
-W, V = generate_weights()
+def plot_bell_3d(output, x, y):
+    ax = plt.axes(projection="3d")
+    xx, yy = np.meshgrid(x, y)
+    zz = np.reshape(output, xx.shape)
+    ax.plot_surface(xx, yy, zz)
+    plt.show()
+
+
+""" TASK 3.2.1 """
+#X, T = generate_io_matrix()
+#W, V = generate_weights(X)
+
+""" TASK 3.2.2 """
+#X = generate_io_encoder_matrix()
+#T = phi(X)
+
+""" TASK 3.2.3 """
+#print(gauss_bell_function(1,1))
+x, y, X, T = generate_bell_data()
+W, V = generate_weights(X)
+
+""" Training """
 W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X, T, W, V, n_epochs)
-print(W)
-#print("Accuracy" + str(calculate_accuracy(o_out)))
-# print("H")
-# print(h_out)
-# print("TARGET")
-# print(T)
-# print(W)
+#print(o_out)
+
+""" Plotting """
 #plot_data_points(X)
 #for w in W:
 #    plotLine(w)
-
 #plt.grid()
 #plt.show()
+#plt.grid()
+#plt.show()
+#plot_mse(mse_array)
+print("-------O--------")
+print(o_out)
+print("-------T--------")
+print(T)
+print("------MSE----------")
+print(mse_array)
+plot_bell(o_out, x, y)
+plot_bell_3d(o_out, x, y)
 
-plot_mse(mse_array)
