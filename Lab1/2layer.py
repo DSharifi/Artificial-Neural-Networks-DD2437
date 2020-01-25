@@ -3,10 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # NETWORK SETTINGS
-n_epochs = 100
-hidden_nodes = 5
-features = 8  # input_nodes, for 3.2.1-3.2.2
-eta = 0.1
+n_epochs = 30000
+hidden_nodes = 16
+features = 2  # input_nodes, for 3.2.1-3.2.2
+eta = 0.001
 output_nodes = 1
 
 # DATA generation for 3.2.1
@@ -23,10 +23,10 @@ n_classes = 2
 
 def generate_weights(X):
     # Weight, W
-    W = np.random.normal(0, 0.001, (hidden_nodes, X.shape[0]))
+    W = np.random.normal(1, 0.5, (hidden_nodes, X.shape[0]))
 
     # Weight, V
-    V = np.random.normal(0, 0.001, (output_nodes, hidden_nodes + 1))
+    V = np.random.normal(1, 0.5, (output_nodes, hidden_nodes + 1))
     return W, V
 
 
@@ -63,15 +63,13 @@ def generate_io_encoder_matrix():
     return X.T
 
 def generate_bell_data():
-    x = np.reshape(np.arange(-5, 5, 0.5), (20, 1))
-    y = np.reshape(np.arange(-5, 5, 0.5), (20, 1))
-    z = np.exp(-x * x * 0.1) * np.exp(-y * y * 0.1).T - 0.5
-    ndata = x.shape[0]*y.shape[0]
-    T = np.reshape(z, (1, ndata))
-    xx, yy = np.meshgrid(x, y)
-    X = np.vstack((np.reshape(xx, (1, ndata)), np.reshape(yy, (1, ndata))))
-    return x, y, X, T
-
+    x = np.arange(-5, 5, 0.5)
+    y = np.arange(-5, 5, 0.5)
+    xx, yy = np.meshgrid(x, y, sparse=False)
+    xx, yy = xx.flatten(), yy.flatten()
+    X = np.vstack([xx, yy, np.ones(len(xx))])
+    T = np.atleast_2d(gauss_bell_function(xx, yy))
+    return X, T, x, y
 
 def gauss_bell_function(x, y):
     return np.exp(-(x**2 + y**2)/10) - 0.5
@@ -99,7 +97,8 @@ def forward_pass(X, W, V):
     # h_out = np.array([phi(h_in)], [1]*X.shape[1])         ### Kommer ge error
     h_out = np.concatenate((phi(h_in), np.ones((1, X.shape[1]))))
     oin = V @ h_out
-    return phi(oin), h_out
+    o_out = phi(oin)
+    return o_out, h_out
 
 
 def backward_pass(out, hout, T, V):
@@ -152,7 +151,7 @@ def calculate_accuracy(o_out):
         return (data_points * 2 - counter) / (data_points * 2)
 
 
-def two_layer_perceptron(X, T, W, V, n_epoch, use_momentum=False):
+def two_layer_perceptron(X, T, W, V, n_epoch, x, y, use_momentum=False):
     mse = np.zeros(n_epoch)
     dw = 0
     dv = 0
@@ -164,7 +163,8 @@ def two_layer_perceptron(X, T, W, V, n_epoch, use_momentum=False):
         else:
             W, V, dw, dv = weight_update(delta_h, delta_o, X, W, h_out, V, True, dw, dv)
         mse[i] = MSE(T, o_out)
-        # print(mse[i])
+        #plot_bell_3d(o_out, x, y)
+        #print(mse[i])
 
     return W, V, dw, dv, o_out, h_out, mse
 
@@ -224,6 +224,8 @@ def plot_bell_3d(output, x, y):
     zz = np.reshape(output, xx.shape)
     ax.plot_surface(xx, yy, zz)
     plt.show()
+    #plt.pause(0.01)
+    #plt.waitforbuttonpress()
 
 
 """ TASK 3.2.1 """
@@ -236,11 +238,11 @@ def plot_bell_3d(output, x, y):
 
 """ TASK 3.2.3 """
 #print(gauss_bell_function(1,1))
-x, y, X, T = generate_bell_data()
+X, T, x, y = generate_bell_data()
 W, V = generate_weights(X)
 
 """ Training """
-W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X, T, W, V, n_epochs)
+W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X, T, W, V, n_epochs, x, y, True)
 #print(o_out)
 
 """ Plotting """
