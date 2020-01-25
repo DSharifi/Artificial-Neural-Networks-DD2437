@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # NETWORK SETTINGS
-n_epochs = 10
-hidden_nodes = 3
+n_epochs = 100000
+hidden_nodes = 2
 features = 8  # input_nodes
-eta = 0.001
+eta = 0.01
 output_nodes = 8
 
 # DATA STRUCTURE
@@ -18,6 +18,9 @@ n_classes = 2
 
 
 # WEIGHT
+
+#def generate_encoder_weights():
+#    W = np.random.normal(0, 0.001, (T.shape[0], hidden_nodes, X.shape[0]))
 
 
 def generate_weights():
@@ -58,7 +61,7 @@ def generate_io_encoder_matrix():
     X = np.ones([data_points, features]) * -1
     for i, x in enumerate(X):
         x[rand[i]] = 1
-    return X
+    return X.T
 
 
 def MSE(T, y):
@@ -124,16 +127,14 @@ def weight_update(delta_h, delta_o, X, W, H, V, use_momentum=False, dw=0, dv=0):
 
 
 def calculate_accuracy_encoder(o_out, T):
-    out = np.sign(o_out)
-    t = np.sign(T)
+    out = np.sign(o_out).T
+    t = np.sign(T).T
     counter = 0
-    print(T.shape)
-    print(out.shape)
-    print(T[0])
+    print(out[0])
     for i, o in enumerate(out):
-        # print(T)
         if np.array_equal(o, t[i]):
             counter += 1
+    print(counter/data_points)
 
 
 def calculate_accuracy(o_out):
@@ -205,14 +206,14 @@ def plotLine(W, bias=True):
 
 
 """ Code here """
-X = generate_io_encoder_matrix()
-T = phi(X)
+#X = generate_io_encoder_matrix()
+#T = phi(X)
 # X, T = generate_io_matrix()
 W, V = generate_weights()
 W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X, T, W, V, n_epochs)
 # print(W)
 # print("Accuracy" + str(calculate_accuracy(o_out)))
-print(str(calculate_accuracy_encoder(o_out, T)))
+#print(str(calculate_accuracy_encoder(o_out, T)))
 # print("H")
 # print(h_out)
 # print("TARGET")

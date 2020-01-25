@@ -29,6 +29,7 @@ def generateInputMatrix(useBias=True):
 
     classW = np.random.normal(0, 5, classX.shape[0])
     classT = np.concatenate(([1] * n, [-1] * n))
+    print(classX.shape)
     # plot(testA, testAT, testB, testBT)
 
     return classX, classT, classW
