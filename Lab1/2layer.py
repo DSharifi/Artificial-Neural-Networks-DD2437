@@ -208,7 +208,7 @@ def plotLine(W, bias=True):
 """ Code here """
 #X = generate_io_encoder_matrix()
 #T = phi(X)
-# X, T = generate_io_matrix()
+X, T = generate_io_matrix()
 W, V = generate_weights()
 W, V, dw, dv, o_out, h_out, mse_array = two_layer_perceptron(X, T, W, V, n_epochs)
 # print(W)
