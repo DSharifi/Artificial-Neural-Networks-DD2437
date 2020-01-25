@@ -1,9 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.neural_network import MLPClassifier
-
-import numpy as np
-import tensorflow
+import tensorflow as tf
 
 lower = 301
 higher = 1501
@@ -66,11 +62,16 @@ def mackey_glass(t_iter):
 
 def network(X_training, Y_training, X_test, Y_test):
     # Compiling
-    opt = SGD(learning_rate=0.01, momentum=0.9)
-    model.compile(optimizer=opt, loss='mse', metrics=['accuracy'])
+    model = tf.keras.Sequential()
 
+    # opt = SGD(learning_rate=0.01, momentum=0.9)
+    model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'], learning_rate=0.01, momentum=0.9)
     # Fit
-    model.fit(X_training, Y_training, epochs=100, batch_size=   )
+    model.fit(X_training, Y_training, epochs=100, batch_size=X_training.shape[1], verbose=2)
+
+    yhat = model.predict(X_test)
+
+    print(yhat)
 
 
 x = mackey_glass(higher + predict)
@@ -78,6 +79,7 @@ inputs, output = generate_io_data(x)
 
 training, validation, test, training_T, validation_T, test_T = split_data(inputs, output)
 
+network(training, training_T, test, test_T)
 # print(inputs)
 # print(output)
 # print(inputs)
