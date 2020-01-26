@@ -67,18 +67,19 @@ def mackey_glass(t_iter):
     return x
 
 
-def network(X_training, Y_training, X_test, Y_test):
+def network(X_training, Y_training, X_test):
     # Compiling
     model = Sequential()
     model.add(Dense(2, input_shape=(features,)))
-    # model.add(Dropout(0.5))
-    model.add(Dense(hidden_nodes , kernel_regularizer=l2(l=0.1)))
+    #model.add(Dropout(0.5))
+    model.add(Dense(hidden_nodes, kernel_regularizer=l2(l=0.3)))
+    #model.add(Dense(hidden_nodes))
     model.add(Dense(output_nodes))
     sgd = SGD(learning_rate=eta, momentum=mom)
     # opt = SGD(learning_rate=0.01, momentum=0.9)
     model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
     # Fit
-    print(X_training.shape)
+    # print(X_training.shape)
     es = EarlyStopping(monitor='val_loss', patience=10)
 
     history = model.fit(X_training, Y_training, epochs=epochs, batch_size=bs, verbose=2,
@@ -93,7 +94,8 @@ def network(X_training, Y_training, X_test, Y_test):
     pyplot.legend()
     pyplot.show()
 
-    #print(yhat)
+    # print(yhat)
+    return yhat
 
 
 x = mackey_glass(higher + predict)
@@ -101,7 +103,22 @@ inputs, output = generate_io_data(x)
 
 training, test, training_T, test_T = split_data(inputs, output)
 
-network(training.T, training_T, test.T, test_T)
+y_predicted = network(training.T, training_T, test.T)
+
+
+def plot_time_series(training_T, y_predicted, test_T):
+    x1 = np.linspace(lower, higher - test_points, training_points)
+    x2 = np.linspace(higher - test_points, higher, test_points)
+    print(training_T.shape)
+    print(x1.shape)
+    pyplot.plot(x1, training_T, color='green')
+    pyplot.plot(x2, y_predicted, color='red')
+    pyplot.plot(x2, test_T, color='green')
+    pyplot.show()
+
+
+plot_time_series(training_T, y_predicted, test_T)
+
 # print(inputs)
 # print(output)
 # print(inputs)
