@@ -2,13 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 n = 100
-mA = [1.0, 0.3]
-mB = [0.0, -0.1]
-sigmaA = 0.2
-sigmaB = 0.3
+mA = [1.0, 0.5]
+mB = [-1.0, 0.0]
+sigmaA = 0.5
+sigmaB = 0.5
+
 eta = 0.001
 ratioA = 0.0
-ratioB = 0.5
+ratioB = 0.0
 
 
 def generateInputMatrix(useBias=True):
@@ -21,6 +22,14 @@ def generateInputMatrix(useBias=True):
     classB1 = np.array(np.random.normal(2, sigmaB, n) * sigmaB + mB[0])
     classB2 = np.array(np.random.normal(2, sigmaB, n) * sigmaB + mB[1])
 
+
+    """
+    classA1 = np.array(np.random.normal(2, sigmaA, n) * sigmaA + mA[0])
+    classA2= np.array(np.random.normal(0, sigmaA, n) * sigmaA + mA[1])
+    classB1= np.array(np.random.normal(2, sigmaB, n) * sigmaB + mB[0])
+    classB2 = np.array(np.random.normal(0, sigmaB, n) * sigmaB + mB[1])
+    """
+
     if useBias:
         classX = np.array(
             [np.concatenate((classA1, classB1)), np.concatenate((classA2, classB2)), np.array([1] * (n * 2))])
@@ -29,7 +38,7 @@ def generateInputMatrix(useBias=True):
 
     classW = np.random.normal(0, 5, classX.shape[0])
     classT = np.concatenate(([1] * n, [-1] * n))
-    # plot(testA, testAT, testB, testBT)
+    #plot(classA1, classA2, classB1, classB2)
 
     return classX, classT, classW
 
