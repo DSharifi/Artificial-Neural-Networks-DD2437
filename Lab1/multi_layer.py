@@ -3,6 +3,8 @@ from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.regularizers import l2
 from matplotlib import pyplot
 
 lower = 301
@@ -12,10 +14,10 @@ points = 1200
 test_points = 200
 training_points = 1000
 features = 5
-hidden_nodes = 10
+hidden_nodes = 50
 output_nodes = 1
-mom = 0.8
-eta = 0.001
+mom = 0.99
+eta = 0.01
 epochs = 1000
 bs = 32
 
@@ -69,14 +71,15 @@ def network(X_training, Y_training, X_test, Y_test):
     # Compiling
     model = Sequential()
     model.add(Dense(2, input_shape=(features,)))
-    model.add(Dense(hidden_nodes))
+    # model.add(Dropout(0.5))
+    model.add(Dense(hidden_nodes , kernel_regularizer=l2(l=0.1)))
     model.add(Dense(output_nodes))
     sgd = SGD(learning_rate=eta, momentum=mom)
     # opt = SGD(learning_rate=0.01, momentum=0.9)
     model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
     # Fit
     print(X_training.shape)
-    es = EarlyStopping(monitor='val_loss', patience=5)
+    es = EarlyStopping(monitor='val_loss', patience=10)
 
     history = model.fit(X_training, Y_training, epochs=epochs, batch_size=bs, verbose=2,
                         validation_split=0.2, callbacks=[es])
@@ -90,7 +93,7 @@ def network(X_training, Y_training, X_test, Y_test):
     pyplot.legend()
     pyplot.show()
 
-    print(yhat)
+    #print(yhat)
 
 
 x = mackey_glass(higher + predict)
