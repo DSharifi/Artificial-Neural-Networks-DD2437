@@ -14,12 +14,13 @@ points = 1200
 test_points = 200
 training_points = 1000
 features = 5
-hidden_nodes = 50
+hidden_nodes = 25
 output_nodes = 1
 mom = 0.99
 eta = 0.01
 epochs = 1000
 bs = 32
+iterations = 10
 
 
 def generate_io_data(x):
@@ -67,13 +68,13 @@ def mackey_glass(t_iter):
     return x
 
 
-def network(X_training, Y_training, X_test):
+def network(X_training, Y_training, X_test, plot=True):
     # Compiling
     model = Sequential()
     model.add(Dense(2, input_shape=(features,)))
-    #model.add(Dropout(0.5))
-    model.add(Dense(hidden_nodes, kernel_regularizer=l2(l=0.3)))
-    #model.add(Dense(hidden_nodes))
+    #model.add(Dropout(0.2))
+    model.add(Dense(hidden_nodes, kernel_regularizer=l2(l=0.1)))
+    model.add(Dense(hidden_nodes))
     model.add(Dense(output_nodes))
     sgd = SGD(learning_rate=eta, momentum=mom)
     # opt = SGD(learning_rate=0.01, momentum=0.9)
@@ -82,28 +83,25 @@ def network(X_training, Y_training, X_test):
     # print(X_training.shape)
     es = EarlyStopping(monitor='val_loss', patience=10)
 
-    history = model.fit(X_training, Y_training, epochs=epochs, batch_size=bs, verbose=2,
+    # verbose = 2
+    history = model.fit(X_training, Y_training, epochs=epochs, batch_size=bs, verbose=0,
                         validation_split=0.2, callbacks=[es])
-
     yhat = model.predict(X_test)
-    pyplot.title('Learning Curves')
-    pyplot.xlabel('Epochs')
-    pyplot.ylabel('MSE')
-    pyplot.plot(history.history['loss'], label='train')
-    pyplot.plot(history.history['val_loss'], label='val')
-    pyplot.legend()
-    pyplot.show()
+    if plot:
+        #pyplot.title('Learning Curves')
+        pyplot.xlabel('Epochs')
+        pyplot.ylabel('MSE')
+        pyplot.plot(history.history['loss'], label='train')
+        pyplot.plot(history.history['val_loss'], label='val')
+        pyplot.legend()
+        pyplot.show()
 
     # print(yhat)
     return yhat
 
 
-x = mackey_glass(higher + predict)
-inputs, output = generate_io_data(x)
-
-training, test, training_T, test_T = split_data(inputs, output)
-
-y_predicted = network(training.T, training_T, test.T)
+def MSE(T, y):
+    return np.square(np.subtract(T, y)).mean()
 
 
 def plot_time_series(training_T, y_predicted, test_T):
@@ -117,7 +115,22 @@ def plot_time_series(training_T, y_predicted, test_T):
     pyplot.show()
 
 
-plot_time_series(training_T, y_predicted, test_T)
+x = mackey_glass(higher + predict)
+inputs, output = generate_io_data(x)
+
+training, test, training_T, test_T = split_data(inputs, output)
+
+i = 0
+errors = []
+while i < iterations:
+    i+=1
+    print(i)
+    y_predicted = network(training.T, training_T, test.T, False)
+    errors.append(MSE(test_T, y_predicted))
+
+print(np.mean(np.array(errors)))
+
+#plot_time_series(training_T, y_predicted, test_T)
 
 # print(inputs)
 # print(output)
