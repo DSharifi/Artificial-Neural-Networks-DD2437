@@ -8,18 +8,18 @@ sigmaA = 0.2
 sigmaB = 0.3
 eta = 0.001
 ratioA = 0.0
-ratioB = 0.5
+ratioB = 0.0
 
 
 def generateInputMatrix(useBias=True):
     np.random.seed(100)
-    classA1 = np.array(np.concatenate((np.random.normal(2, sigmaA, int(n / 2)) * sigmaA - mA[0],
-                                       np.random.normal(2, sigmaA, int(n / 2)) * sigmaA + mA[0])))
+    classA1 = np.array(np.concatenate((np.random.normal(0, sigmaA, int(n / 2)) * sigmaA - mA[0],
+                                           np.random.normal(0, sigmaA, int(n / 2)) * sigmaA + mA[0])))
 
     np.random.shuffle(classA1)
-    classA2 = np.array(np.random.normal(2, sigmaA, n) * sigmaA + mA[1])
-    classB1 = np.array(np.random.normal(2, sigmaB, n) * sigmaB + mB[0])
-    classB2 = np.array(np.random.normal(2, sigmaB, n) * sigmaB + mB[1])
+    classA2 = np.array(np.random.normal(0, sigmaA, n) * sigmaA + mA[1])
+    classB1 = np.array(np.random.normal(0, sigmaB, n) * sigmaB + mB[0])
+    classB2 = np.array(np.random.normal(0, sigmaB, n) * sigmaB + mB[1])
 
     if useBias:
         classX = np.array(
@@ -30,7 +30,7 @@ def generateInputMatrix(useBias=True):
     classW = np.random.normal(0, 5, classX.shape[0])
     classT = np.concatenate(([1] * n, [-1] * n))
     print(classX.shape)
-    # plot(testA, testAT, testB, testBT)
+    plot(classA1, classA2, classB1, classB2)
 
     return classX, classT, classW
 
@@ -109,6 +109,14 @@ def plotIters(errors, iters):
     plt.show()
 
 
+def calculate_y(W, x):
+    b = W[2]
+    k = -(b / W[1]) / (b / W[0])
+    m = -b / W[1]
+    y = k * x + m
+    return y
+
+
 def plotLine(W, bias=True):
     plt.ylim(top=50, bottom=-10)
     y = []
@@ -132,7 +140,6 @@ def plotLine(W, bias=True):
 
 
 def splitData(InputData, TargetData, A_Ratio=0.0, B_Ratio=0.0):
-
     testA = InputData[:, :int(n * A_Ratio)]
     trainingA = InputData[:, int(n * A_Ratio):n]
     testB = InputData[:, n: n + int((B_Ratio * n))]
@@ -150,7 +157,7 @@ def splitData(InputData, TargetData, A_Ratio=0.0, B_Ratio=0.0):
         testX = testB
         testT = testBT
     else:
-        testX = np.concatenate((testA, testB))
+        testX = np.concatenate((testA, testB), axis=1)
         testT = np.concatenate((testAT, testBT))
 
     trainingX = np.concatenate((trainingA, trainingB), axis=1)
@@ -158,15 +165,58 @@ def splitData(InputData, TargetData, A_Ratio=0.0, B_Ratio=0.0):
 
     plot(testA[0], testA[1], testB[0], testB[1])
 
-    return trainingX, trainingT
+    return trainingX, trainingT, testX, testT
     # print(testA.shape)
 
 
 classX, classT, classW = generateInputMatrix()
 
-trainingX, trainingT = splitData(classX, classT, ratioA, ratioB)
+trainingX, trainingT, testX, testT = splitData(classX, classT, ratioA, ratioB)
 W, errors, iters = delta_learning(trainingX, trainingT, classW)
-# W, errors, iters = sequential_delta_learning(classX, classT, classW)
 
-plotLine(W)
+
+def calculate_accuracy(W, testX, testT):
+    predictT = np.zeros(testT.size)
+    for i, x in enumerate(testX.T):
+        if calculate_y(W, x[0]) >= x[1]:
+            predictT[i] = -1
+        else:
+            predictT[i] = 1
+
+    counter = 0
+    sizeA = 0
+    counterA = 0
+    counterB = 0
+    sizeB = 0
+    size = 0
+    for i, t in enumerate(testT):
+        size += 1
+        if t == 1:
+            sizeA += 1
+        else:
+            sizeB += 1
+        if predictT[i] == t:
+            if t == 1:
+                counterA += 1
+            else:
+                counterB += 1
+            counter += 1
+    if sizeA == 0:
+        accuracyA = None
+    else:
+        accuracyA = counterA / sizeA
+    if sizeB == 0:
+        accuracyB = None
+    else:
+        accuracyB = counterB / sizeB
+    #accuracy = counter / size
+    print(accuracyA)
+    print(accuracyB)
+    #print(accuracy)
+
+
+calculate_accuracy(W, testX, testT)
+# W, errors, iters = sequential_delta_learning(classX, classT, classW)
+plt.show()
+#plotLine(W)
 # plotIters(errors, iters)
