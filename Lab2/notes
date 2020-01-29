@@ -1,0 +1,38 @@
+- Number of nodes should be smaller than amount of datapoints when there is noise, otherwise it should be the same.
+
+- If data is complex and n is small, there may not be a good solution. You need alot of data for complex problems.
+
+- No need for bias.
+
+HIDDEN LAYER:
+    -Size of input layer determined by dimensionality of input
+    -Centres and widths of hidden units have to be identified
+
+Finding RBF positions:
+    - K-Means clustering to find position of RBF:s
+    - EM with Gaussian Mixture Models
+    - Supervised gradient descent for RBF parameters
+    , not sure if this is what we're supposed to do.
+
+Least-Square Batch Fitting:
+    - Memory/Computationally heavy
+    - Ill Conditioned?? (whatever that means)
+    - Bad with alot of numerical noise
+    - Solved by recursive least squares
+
+Recursive Least-Squares Estimation:
+    - using delta rule
+
+-------------
+COMPETITION:
+    WEIGHTS IN INPUT SPACE:
+        Proximity measure measures the distance between a datapoint X and a weight W.
+        Each weight is the center of a basis function (gaussian).
+    Competitive Learning:
+        The weight that is closes to the datapoint "wins" and it is the only one that gets to learn using some learning algorithm
+            (which results in the wight moving closer to the point).
+       - Very slow
+
+
+
+# Initialization of input weights on friday lecture lemao.
