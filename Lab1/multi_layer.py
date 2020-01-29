@@ -1,53 +1,66 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.layers import BatchNormalization
 
-#import tensorflow as tf2
+from matplotlib import pyplot
+import time
 
 lower = 301
 higher = 1501
 predict = 5
 points = 1200
-validation_points = 200
 test_points = 200
-training_points = 800
+training_points = 1000
 features = 5
+hidden_nodes2 = 300
+hidden_nodes1 = 50
+
+output_nodes = 1
+mom = 0.99
+eta = 0.01
+epochs = 1000
+bs = 32
+iterations = 3
+sd = 0.09
+
 
 def generate_io_data(x):
-    t = np.arange(lower, higher,1)
-    inputs = np.array([x[t-20], x[t-15], x[t-10], x[t-5], x[t]])
-    output = x[t+predict]
+    t = np.arange(lower, higher, 1)
+    inputs = np.array([x[t - 20], x[t - 15], x[t - 10], x[t - 5], x[t]])
+    output = x[t + predict] + np.random.normal(0, sd, points)
     return inputs, output
+
 
 def split_data(inputs, output):
     training = np.zeros([features, training_points])
-    validation = np.zeros([features, validation_points])
     test = np.zeros([features, test_points])
-    
+
     training_T = np.zeros(training_points)
-    validation_T = np.zeros(validation_points)
     test_T = np.zeros(test_points)
 
-    #Input splits
+    # Input splits
     for i in range(features):
         training[i] = inputs[i, :training_points]
-        validation[i] = inputs[i, training_points:validation_points+training_points]
-        test[i] = inputs[i, validation_points+training_points:]
-    
-    #Output Split
-    training_T = output[:training_points]
-    validation_T = output[training_points:training_points+validation_points]
-    test_T = output[training_points+validation_points:]
+        test[i] = inputs[i, training_points:]
 
-    return training, validation, test, training_T, validation_T, test_T
+    # Output Split
+    training_T = output[:training_points]
+    test_T = output[training_points:]
+
+    return training, test, training_T, test_T
+
 
 def mackey_glass(t_iter):
     beta = 0.2
     gamma = 0.1
     n = 10
     tao = 25
-    x = np.zeros(t_iter+1)
+    x = np.zeros(t_iter + 1)
     x[0] = 1.5
     for t in range(t_iter):
         res = t - tao
@@ -57,72 +70,130 @@ def mackey_glass(t_iter):
             res = x[0]
         else:
             res = x[res]
-        x[t+1] = x[t] + (beta * res) / (1 + res**n) - gamma * x[t]
+        x[t + 1] = x[t] + (beta * res) / (1 + res ** n) - gamma * x[t]
     return x
 
 
-def tensorflowa_oss(x_train, y_train, x_val, y_val):
-    return
+def network(X_training, Y_training, X_test, plot=True, regularization=True, hidden_nodes=hidden_nodes2):
+    # Compiling
+    model = Sequential()
+    model.add(Dense(3, input_shape=(features,)))
+    #model.add(Dropout(0.2))
+    # model.add(Dense(hidden_nodes, kernel_regularizer=l2(l=0.1)))
+
+    model.add(Dense(hidden_nodes1))
+    #model.add(Dropout(0.2))
+    model.add(Dense(hidden_nodes))
+    model.add(Dense(output_nodes))
+    sgd = SGD(learning_rate=eta, momentum=mom)
+    # opt = SGD(learning_rate=0.01, momentum=0.9)
+    model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
+    # Fit
+    # print(X_training.shape)
+    es = EarlyStopping(monitor='val_loss', patience=10)
+
+    # verbose = 2
+    start_time = time.time()
+    history = model.fit(X_training, Y_training, epochs=epochs, batch_size=bs, verbose=0,
+                        validation_split=0.2, callbacks=[es])
+    elapsed_time = time.time() - start_time
+
+    yhat = model.predict(X_test)
+    weights, biases = model.layers[0].get_weights()
+
+    if plot:
+        # pyplot.title('Learning Curves')
+        pyplot.xlabel('Epochs')
+        pyplot.ylabel('MSE')
+        pyplot.plot(history.history['loss'], label='train')
+        pyplot.plot(history.history['val_loss'], label='val')
+        pyplot.legend()
+        pyplot.show()
+
+    # print(yhat)
+    return yhat, history.history['val_loss'][len(history.history['val_loss']) - 1], weights, elapsed_time
 
 
-#W_temp = tf.Variable(tf.zeros([784,10], tf.float32))
-#print(W_temp)
-
-def youtube(x_data, y_data):
-    
-    x_data = np.array([[0,0], [0,1], [1,0], [1,1]])
-    y_data = np.array([[0], [1], [1], [0]])
-
-    n_input = 5
-    n_hidden = 2
-    n_output = 1
-    learning_rate = 0.1
-    epochs = 10000
-
-    X = tf.placeholder('float')
-    Y = tf.placeholder('float')
-      
-    W1 = tf.Variable(tf.random_uniform([n_input, n_hidden], -1.0, 1.0))
-    W2 = tf.Variable(tf.random_uniform([n_hidden, n_output], -1.0, 1.0))
-
-    b1 = tf.Variable(tf.zeros([n_hidden]), name = "Bias1")
-    b2 = tf.Variable(tf.zeros([n_hidden]), name = "Bias2")
+def MSE(T, y):
+    return np.square(np.subtract(T, y)).mean()
 
 
-    L2 = tf.sigmoid(tf.matmul(X,W1) + b1)
-    hy = tf.sigmoid(tf.matmul(L2, W2) + b2)
-
-    cost = tf.reduce_mean(-Y*tf.log(hy) - (1-Y)*tf.log(1-hy))
-
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
-
-    init = tf.initialize_all_variables()
-
-    with tf.Session() as session:
-        session.run(init)
-
-        for step in range(epochs):
-            session.run(optimizer, feed_dict={X: x_data, Y: y_data})
-
-            if step % 1000 == 0:
-                print(session.run(cost, feed_dict={X: x_data, Y: y_data}))
-
-        answer = tf.equal(tf.floor(hy + 0.5), Y)
-        accuracy = tf.reduce_mean(tf.cast(answer, "float"))
-
-        print(session.run([hy], feed_dict={X: x_data, Y: y_data}))
-        print("Accuracy: ", accuracy.eval({X: x_data, Y: y_data}))
+def plot_histo(weights):
+    x = np.linspace(1, features, features)
+    y = weights
+    print(weights.T[0])
+    print(x)
+    pyplot.hist(y, bins=5)
+    pyplot.ylabel('Weight')
+    pyplot.xlabel('Feature')
+    pyplot.show()
 
 
-x = mackey_glass(higher+predict)
+def plot_time_series(training_T, test_T, y_predicted=None):
+    # x1 = np.linspace(lower, higher - test_points, training_points)
+    x1 = np.arange(lower, higher - test_points, 1)
+    x2 = np.arange(higher - test_points, higher, 1)
+
+    # x2 = np.linspace(higher - test_points, higher, test_points)
+    print(x1)
+    print(x2)
+    pyplot.plot(x1, training_T, color='green')
+    if y_predicted is not None:
+        pyplot.plot(x2, y_predicted, color='red', label='Error')
+    pyplot.plot(x2, test_T, color='green', label='Training')
+    pyplot.xlabel('Time')
+    pyplot.ylabel('Output')
+    pyplot.legend(loc='lower-right')
+    pyplot.title("Time Series for test-set")
+    pyplot.show()
+
+
+def averageMSE(training, training_T, test):
+    i = 0
+    errors = []
+    while i < iterations:
+        i += 1
+        print(i)
+        y_predicted, error, weight = network(training.T, training_T, test.T, False, True)
+        # errors.append(MSE(test_T, y_predicted))
+        errors.append(error)
+    print(np.mean(np.array(errors)))
+
+
+def takeTime(X_training, Y_training, X_test):
+    i = 0
+    iterations = 10
+    times = []
+    nodes = []
+    while i < iterations:
+        i += 1
+        hidden_nodes = i * 100
+        nodes.append(hidden_nodes)
+        x,y,z, time = network(X_training.T, Y_training, X_test.T, False, True, hidden_nodes)
+        print(time)
+        times.append(time)
+    pyplot.plot(nodes, times)
+    pyplot.title("Time elapsed depending on hidden nodes")
+    pyplot.xlabel("Amount of hidden nodes in 2nd layer")
+    pyplot.ylabel("Time Elapsed")
+    pyplot.show()
+
+
+x = mackey_glass(higher + predict)
 inputs, output = generate_io_data(x)
-training, validation, test, training_T, validation_T, test_T = split_data(inputs, output)
 
-#print(inputs)
-#print(output)
-youtube(training.T,training_T.T)
-#print(inputs)
-#tf2.random_normal_initializer()
-#trains_ds = tf.load(inputs, split='train')
-print(inputs)
-#print(trains_ds)
+training, test, training_T, test_T = split_data(inputs, output)
+
+# averageMSE(training,training_T,test)
+# y_predicted, error, weights = network(training.T, training_T, test.T, False, True)
+# print(weights)
+# plot_histo(weights)
+# plot_time_series(training_T, test_T, y_predicted)
+
+takeTime(training, training_T, test)
+# print(inputs)
+# print(output)
+# print(inputs)
+# tf2.random_normal_initializer()
+# trains_ds = tf.load(inputs, split='train')
+# print(trains_ds)
