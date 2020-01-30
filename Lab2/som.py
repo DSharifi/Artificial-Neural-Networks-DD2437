@@ -162,9 +162,9 @@ def test_network(animal_matrix,weight_matrix):
 
     return pos_vector
     
-#----------------------------------------#
-#------------Function calls--------------#
-#----------------------------------------#
+#---------------------------------------------------#
+#-------------------Function calls------------------#
+#---------------------------------------------------#
 animal_matrix = read_in_file_to_matrix("data_lab2/animals.dat", 84)
 
 animal_names = read_in_file_to_vector("data_lab2/animalnames.txt").reshape(-1,1)
