@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 datapoints = 63
 feature = 1
 nodes = 63
-sigma = 0.8
+sigma = 0.5
 noise = False
 
 
@@ -79,7 +79,7 @@ def network(weights, training, testing, targets):
 
 
 def competitive_learning(training):
-    iterations = 500
+    iterations = 100
     W = init_weights()
     for i in range(0, iterations):
         W = train(W, training)
