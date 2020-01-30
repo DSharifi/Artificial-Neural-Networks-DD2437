@@ -10,3 +10,6 @@
 
 
 ### Lab 2 - Radial Basis Function Network
+- [x] Radial Basis Function Network Models for predicting function values
+- [x] Hybrid RBF using Competitive Learning at input layer
+- [x] Self-Organizing Maps for unsupervised learning in RBF Networks
