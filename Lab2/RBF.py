@@ -120,9 +120,16 @@ def plot_function(true_function, approx_function):
     plt.legend(loc="upper right")
     plt.grid()
     plt.show()
-    
-def delta_learning(n_epochs, eta, use_square=False):
-    training_points, testing_points, sin2x_target, square2x_target = generate_data(True)
+
+
+def shuffle(a, b):
+    p = np.random.permutation(len(a))
+    print(p)
+    return a[p], b[p]
+
+
+def delta_learning(n_epochs, eta, use_square=False, use_noise=False):
+    training_points, testing_points, sin2x_target, square2x_target = generate_data(True if use_noise else False)
     chosen_target = sin2x_target if not use_square else square2x_target
     mu_node_list, sigma_node_list = init_hidden_nodes()
     phi_matrix = generate_phi_matrix(mu_node_list, sigma_node_list, training_points)
@@ -132,6 +139,7 @@ def delta_learning(n_epochs, eta, use_square=False):
     iters = 0
     #TODO: SHUFFLE
     while iters < n_epochs:
+        #phi_matrix, chosen_target = shuffle(phi_matrix, chosen_target)
         error = chosen_target[k] - (phi_matrix[k] @ W)
         k = (k+1) % total_points
         delta_w = delta_rule(error, phi_matrix, k, eta)
@@ -139,13 +147,14 @@ def delta_learning(n_epochs, eta, use_square=False):
         iters += 1
     result_matrix = phi_test_matrix @ W
     mean_error = np.abs(np.subtract(result_matrix, chosen_target)).mean()
-    return mean_error
+    return mean_error, W, phi_test_matrix
 
-def least_square_learning(use_square=False):
-    training_points, testing_points, sin2x_target, square2x_target = generate_data(True)
+def least_square_learning(use_square=False, use_noise=False):
+    training_points, testing_points, sin2x_target, square2x_target = generate_data(True if use_noise else False)
     mu_node_list, sigma_node_list = init_hidden_nodes()
     phi_matrix = generate_phi_matrix(mu_node_list, sigma_node_list, training_points)
     W = list()
+    phi_test_matrix = list()
     if not use_square:
         W = least_squares(phi_matrix, sin2x_target)
         phi_test_matrix = generate_phi_matrix(mu_node_list, sigma_node_list, testing_points)
@@ -161,27 +170,30 @@ def least_square_learning(use_square=False):
             else:
                 result_matrix[k] = -1
         mean_error = np.abs(np.subtract(result_matrix, square2x_target)).mean()
-    return mean_error, W
+    return mean_error, W, result_matrix
 
-def task3_2(use_square=False, use_delta=False, n_epochs=10000):
+def task3_2(use_square=False, use_delta=False, use_noise=False, n_epochs=5000):
     global sigma, hidden_nodes, eta
     mean_error_list = list()
     #eta_array = np.array([0.001, 0.005, 0.01, 0.05])
     W = list()
+    result_matrix = list()
+    _, _, sin2x_target, square2x_target = generate_data(True if use_noise else False)
     for i in range(1,total_points):
         hidden_nodes = i
         if use_delta:
-            abs_mean_error = delta_learning(n_epochs, eta, use_square)
+            abs_mean_error, W, phi_test_matrix = delta_learning(n_epochs, eta, use_square, use_noise)
             mean_error_list.append(abs_mean_error)
         else:
-            abs_mean_error, W = least_square_learning(use_square)
+            abs_mean_error, W, result_matrix = least_square_learning(use_square, use_noise)
             mean_error_list.append(abs_mean_error)
     plot_error(np.arange(1, total_points), mean_error_list, True if use_delta else False)
-    #plot_function()
+    plot_function(square2x_target if use_square else sin2x_target, phi_test_matrix @ W if use_delta else result_matrix)
     return abs_mean_error
 #------------Task calls--------------#
 #task3_1(True)
 #plot_function()
 #task3_1(use_square=False)
-task3_2(True, False)
+task3_2(use_square=False, use_delta=True, use_noise=True, n_epochs=5000)
+
 #----------------------------------------#
