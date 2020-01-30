@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 datapoints = 63
 feature = 1
 nodes = 63
-sigma = 0.5
+sigma = 1
 noise = False
 
 
@@ -67,25 +67,59 @@ def least_squares(phi, function_target):
     return np.linalg.solve(phi.T @ phi, phi.T @ function_target)  # W
 
 
-def network(weights, training, testing, targets):
-    phi = generate_phi_matrix(weights, training)
-    W = least_squares(phi, targets)
-    phi_test_matrix = generate_phi_matrix(weights, testing)
-    total_error = np.square(np.subtract(phi_test_matrix @ W, targets)).mean()
-    plt.plot(testing, phi_test_matrix @ W, label="Approximate")
-    plt.plot(testing, targets, label="True")
-    plt.legend()
+def plot_error(nodes, errors):
+    plt.plot(nodes, errors, color="blue", label="Error")
+
+    plt.title(
+        "Absolute residual error depending on size of the hidden layer\nfor least_square learning, width=" + str(sigma))
+    plt.xlabel("Amount of Hidden Nodes")
+    plt.ylabel("Absolute residual error")
+    plt.legend(loc="upper right")
+    plt.grid()
     plt.show()
 
 
+def network(weights, training, testing, targets, plot=False):
+    phi = generate_phi_matrix(weights, training)
+    W = least_squares(phi, targets)
+    phi_test_matrix = generate_phi_matrix(weights, testing)
+    total_error = np.abs(np.subtract(phi_test_matrix @ W, targets)).mean()
+    print(total_error)
+    if plot:
+        plt.plot(testing, phi_test_matrix @ W, label="Approximate")
+        plt.plot(testing, targets, label="True")
+        plt.legend()
+        plt.title("RBF Network with Competitive Learning \n  hidden nodes: " + str(nodes) + ", sigma: " + str(sigma))
+        plt.grid()
+        plt.show()
+    return total_error
+
+
 def competitive_learning(training):
-    iterations = 100
+    iterations = 20
     W = init_weights()
     for i in range(0, iterations):
         W = train(W, training)
     return W
 
 
+def error_testing():
+    global nodes
+    training, testing, sin_target, square_target = r.generate_data(noise)
+    errors = []
+    amt_nodes = []
+    for i in range(2, nodes):
+        print(i)
+        nodes = i
+        weights = competitive_learning(training)
+        amt_nodes.append(i)
+        errors.append(network(weights, training, testing, sin_target))
+    plot_error(amt_nodes, errors)
+
+
 training, testing, sin_target, square_target = r.generate_data(noise)
 weights = competitive_learning(training)
-network(weights, training, testing, square_target)
+network(weights, training, testing, sin_target, True)
+#error_testing()
+
+
