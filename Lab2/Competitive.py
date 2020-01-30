@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 datapoints = 63
 feature = 1
-nodes = 63
+nodes = 30
 sigma = 1
-noise = False
+noise = True
 
 
 def find_closest(x, W):
@@ -22,7 +22,7 @@ def find_closest(x, W):
     return closest
 
 
-def delta_w(x, w, eta=0.2):
+def delta_w(x, w, eta=0.5):
     return eta * (x - w)
 
 
@@ -35,7 +35,7 @@ def train_x(x, W):
 
 
 def init_weights():
-    return np.random.rand(datapoints)
+    return np.random.rand(nodes)
 
 
 def gaussian_rbf(x1, x2, sigma):
@@ -88,6 +88,7 @@ def network(weights, training, testing, targets, plot=False):
     if plot:
         plt.plot(testing, phi_test_matrix @ W, label="Approximate")
         plt.plot(testing, targets, label="True")
+        plt.scatter(weights, np.zeros(nodes), label="weights")
         plt.legend()
         plt.title("RBF Network with Competitive Learning \n  hidden nodes: " + str(nodes) + ", sigma: " + str(sigma))
         plt.grid()
