@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 total_points = 63
 # Hidden nodes...
 hidden_nodes = 25
-eta= 0.01
 #--------------------------------#
 
 
@@ -96,10 +95,10 @@ def task3_1(use_square = False):
             nodes.append(hidden_nodes)
 
         if i >= iterations:
-            plot_error(nodes, errors)
+            plot_error(nodes, errors, 0.01)
             plot_function(square2x_target if use_square else sin2x_target, result_matrix)
 
-def plot_error(nodes, errors, delta_plot=False):
+def plot_error(nodes, errors, eta, delta_plot=False):
     plt.plot(nodes, errors, color="blue", label="Error")
     if delta_plot:
         plt.title("Absolute residual error depending on size of the hidden layer\nfor delta learning, width=" + str(sigma) + ", eta=" + str(eta))
@@ -124,7 +123,7 @@ def plot_function(true_function, approx_function):
 
 def shuffle(a, b):
     p = np.random.permutation(len(a))
-    print(p)
+    #print(p)
     return a[p], b[p]
 
 
@@ -172,8 +171,8 @@ def least_square_learning(use_square=False, use_noise=False):
         mean_error = np.abs(np.subtract(result_matrix, square2x_target)).mean()
     return mean_error, W, result_matrix
 
-def task3_2(use_square=False, use_delta=False, use_noise=False, n_epochs=5000):
-    global sigma, hidden_nodes, eta
+def task3_2(use_square=False, use_delta=False, use_noise=False, eta=0.01, n_epochs=5000):
+    global sigma, hidden_nodes
     mean_error_list = list()
     #eta_array = np.array([0.001, 0.005, 0.01, 0.05])
     W = list()
@@ -187,13 +186,12 @@ def task3_2(use_square=False, use_delta=False, use_noise=False, n_epochs=5000):
         else:
             abs_mean_error, W, result_matrix = least_square_learning(use_square, use_noise)
             mean_error_list.append(abs_mean_error)
-    plot_error(np.arange(1, total_points), mean_error_list, True if use_delta else False)
+    plot_error(np.arange(1, total_points), mean_error_list, eta, True if use_delta else False)
     plot_function(square2x_target if use_square else sin2x_target, phi_test_matrix @ W if use_delta else result_matrix)
     return abs_mean_error
 #------------Task calls--------------#
 #task3_1(True)
 #plot_function()
 #task3_1(use_square=False)
-task3_2(use_square=False, use_delta=True, use_noise=True, n_epochs=5000)
-
+task3_2(use_square=False, use_delta=False, use_noise=True, eta=0.01, n_epochs=5000)
 #----------------------------------------#
