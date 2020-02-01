@@ -194,7 +194,6 @@ def task3_2(use_square=False, use_delta=False, use_noise=False, eta=0.01, n_epoc
     return abs_mean_error
 #------------Task calls--------------#
 #task3_1(True)
-#plot_function()
 #task3_1(use_square=False)
-task3_2(use_square=True, use_delta=False, use_noise=False, eta=0.01, n_epochs=5000)
+task3_2(use_square=False, use_delta=True, use_noise=True, eta=0.01, n_epochs=5000)
 #----------------------------------------#
