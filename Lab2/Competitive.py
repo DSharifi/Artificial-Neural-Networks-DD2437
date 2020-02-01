@@ -2,12 +2,12 @@ import numpy as np
 import RBF as r
 import matplotlib.pyplot as plt
 
-datapoints = 63
-feature = 1
-nodes = 90
+datapoints = 100
+feature = 2
+nodes = 45
 sigma = 1
-amt_learn = 1
-eta = 0.2
+amt_learn = 10
+eta = 0.5
 noise = True
 winners = np.zeros(nodes)
 
@@ -28,7 +28,8 @@ def find_X_closest(x, W, amt=amt_learn):
         if i >= nodes:
             break
         index = np.argmin(distances)
-        winners[index] += 1
+        if i == 0:
+            winners[index] += 1
         weights.append(index)
         distances[index] = np.inf
     return weights
@@ -117,34 +118,38 @@ def network(weights, training, testing, targets_training, targets_test, plot=Fal
         plt.plot(testing, targets_test, label="True")
         # plt.scatter(weights.T[0], weights.T[1], label="weights")
         plt.legend()
-        plt.title("RBF Network with Competitive Learning \n  hidden nodes: " + str(nodes) + ", sigma: " + str(
-            sigma) + ", learning rate: " + str(eta) + ", Amount of winners: " + str(amt_learn))
+        plt.title("RBF Network with Competitive Learning hidden nodes: " + str(nodes) + "\n sigma: " + str(
+            sigma) + ", learning rate: " + str(eta) + ", Amount of winners: " + str(amt_learn) + "\n Gaussian Noise with SD: " + str(0.1))
         plt.grid()
         plt.show()
     return total_error
 
 
 def competitive_learning(training):
-    iterations = 100
+    iterations = 10
     W = init_weights()
     for i in range(0, iterations):
         W = train(W, training)
     return W
 
 
-def error_testing(training, testing, target, targety):
+def error_testing(training, testing, target, target_test):
     global nodes
     errors = []
     amt_nodes = []
+    iters = 30
     for i in range(5, nodes):
-        nodes = i
-        weights = competitive_learning(training)
+        sum = 0
+        for j in range(iters):
+            nodes = i
+            weights = competitive_learning(training)
+            sum += (network(weights, training, testing, target, target_test))
         amt_nodes.append(i)
-        errors.append(network(weights, training, testing, target, targety))
+        errors.append(sum/iters)
     plot_error(amt_nodes, errors)
 
 
-def read_file_data(filename):
+def read_file_data(filename, noise=noise):
     file = "data_lab2/" + filename
 
     file = open(file, "r")
@@ -158,13 +163,29 @@ def read_file_data(filename):
     list.append(templist)
     training = np.asfarray(np.array(list), float)
     training_X, training_Y = np.hsplit(training, 2)
+    if noise:
+        training_X += np.random.normal(0, 0.1, [datapoints, feature])
     return training_X, training_Y
 
 
+def weight_plot(training_x):
+    weights = competitive_learning(training_x)
+    plt.scatter(weights.T[0], weights.T[1], label="weights")
+    plt.legend()
+    plt.xlabel("Angle")
+    plt.ylabel("Velocity")
+    plt.title("Weight positioning with " + str(nodes) + " hidden nodes\n, sigma: " + str(
+        sigma) + ", learning rate: " + str(eta) + ", Amount of winners: " + str(
+        amt_learn) + ", Gaussian Noise with SD: " + str(noise))
+    plt.grid()
+    plt.show()
+
+
 if __name__ == "__main__":
-    # training_x, training_y = read_file_data("ballist.dat")
-    # test_x, test_y = read_file_data("balltest.dat")
-    training_x, testing_x, sin2x_target, square2x_target, sintarget_y = r.generate_data(False)
-    error_testing(training_x, testing_x, sin2x_target, sintarget_y)
-    # weights = competitive_learning(training_x)
-    # network(weights, training_x, testing_x, sin2x_target, sintarget_y, True)
+    training_x, training_y = read_file_data("ballist.dat")
+    test_x, test_y = read_file_data("balltest.dat")
+    #error_testing(training_x,test_x,training_y,test_y)
+    weights = competitive_learning(training_x)
+    print(winners)
+
+    #(network(weights, training_x, test_x, training_y, test_y, False))
