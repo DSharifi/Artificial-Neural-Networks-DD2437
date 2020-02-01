@@ -127,8 +127,8 @@ def shuffle(a, b):
     return a[p], b[p]
 
 
-def delta_learning(n_epochs, eta, use_square=False, use_noise=False):
-    training_points, testing_points, sin2x_target, square2x_target = generate_data(True if use_noise else False)
+def delta_learning(sin2x_target, square2x_target, n_epochs, eta, use_square=False):
+    training_points, testing_points, _, _ = generate_data()
     chosen_target = sin2x_target if not use_square else square2x_target
     mu_node_list, sigma_node_list = init_hidden_nodes()
     phi_matrix = generate_phi_matrix(mu_node_list, sigma_node_list, training_points)
@@ -148,8 +148,8 @@ def delta_learning(n_epochs, eta, use_square=False, use_noise=False):
     mean_error = np.abs(np.subtract(result_matrix, chosen_target)).mean()
     return mean_error, W, phi_test_matrix
 
-def least_square_learning(use_square=False, use_noise=False):
-    training_points, testing_points, sin2x_target, square2x_target = generate_data(True if use_noise else False)
+def least_square_learning(sin2x_target, square2x_target, use_square=False):
+    training_points, testing_points, _, _ = generate_data()
     mu_node_list, sigma_node_list = init_hidden_nodes()
     phi_matrix = generate_phi_matrix(mu_node_list, sigma_node_list, training_points)
     W = list()
@@ -181,13 +181,13 @@ def task3_2(use_square=False, use_delta=False, use_noise=False, eta=0.01, n_epoc
     for i in range(1,total_points):
         hidden_nodes = i
         if use_delta:
-            abs_mean_error, W, phi_test_matrix = delta_learning(n_epochs, eta, use_square, use_noise)
+            abs_mean_error, W, phi_test_matrix = delta_learning(sin2x_target, square2x_target, n_epochs, eta, use_square)
             mean_error_list.append(abs_mean_error)
         else:
-            abs_mean_error, W, result_matrix = least_square_learning(use_square, use_noise)
+            abs_mean_error, W, result_matrix = least_square_learning(sin2x_target, square2x_target, use_square)
             mean_error_list.append(abs_mean_error)
     plot_error(np.arange(1, total_points), mean_error_list, eta, True if use_delta else False)
-    plot_function(square2x_target if use_square else sin2x_target, phi_test_matrix @ W if use_delta else result_matrix)
+    plot_function(square2x_target if use_square else sin2x_target, phi_test_matrix @ W if use_square else result_matrix)
     return abs_mean_error
 #------------Task calls--------------#
 #task3_1(True)
