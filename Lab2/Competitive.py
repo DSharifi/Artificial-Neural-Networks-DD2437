@@ -4,12 +4,16 @@ import matplotlib.pyplot as plt
 
 datapoints = 100
 feature = 2
-nodes = 45
+nodes = 100
 sigma = 1
 amt_learn = 10
 eta = 0.5
-noise = True
+noise = False
 winners = np.zeros(nodes)
+if noise:
+    data_noise = 0.1
+else:
+    data_noise = 0
 
 
 def find_X_closest(x, W, amt=amt_learn):
@@ -86,10 +90,12 @@ def train(W, X):
 
 
 def generate_phi_matrix(mu_node_list, x_values):
-    phi = np.zeros((nodes, datapoints))  # will be features x hidden_nodes
+    phi = np.zeros((datapoints, nodes))  # will be features x hidden_nodes
+
     for i in range(nodes):
-        phi[i] = gaussian_rbf(x_values, mu_node_list[i], sigma)
-    return phi.T
+        for j in range(datapoints):
+            phi[j][i] = gaussian_rbf(x_values[j], mu_node_list[i], sigma)
+    return phi
 
 
 def least_squares(phi, function_target):
@@ -100,7 +106,8 @@ def plot_error(nodes, errors):
     plt.plot(nodes, errors, color="blue", label="Error")
 
     plt.title(
-        "Absolute residual error depending on size of the hidden layer\nfor least_square learning, width=" + str(sigma))
+        "Absolute residual error depending on size of the hidden layer\nfor the ball problem, width=" + str(
+            sigma) + ", Data noise (SD): " + str(data_noise))
     plt.xlabel("Amount of Hidden Nodes")
     plt.ylabel("Absolute residual error")
     plt.legend(loc="upper right")
@@ -112,14 +119,15 @@ def network(weights, training, testing, targets_training, targets_test, plot=Fal
     phi = generate_phi_matrix(weights, training)
     W = least_squares(phi, targets_training)
     phi_test_matrix = generate_phi_matrix(weights, testing)
-    total_error = np.abs(np.subtract(phi_test_matrix @ W, targets_test)).mean()
+    total_error = np.abs(np.linalg.norm(phi_test_matrix @ W - targets_test)).mean()
     if plot:
-        plt.plot(testing, phi_test_matrix @ W, label="Approximate")
-        plt.plot(testing, targets_test, label="True")
+        plt.scatter(testing, phi_test_matrix @ W, label="Approximate")
+        plt.scatter(testing, targets_test, label="True")
         # plt.scatter(weights.T[0], weights.T[1], label="weights")
         plt.legend()
         plt.title("RBF Network with Competitive Learning hidden nodes: " + str(nodes) + "\n sigma: " + str(
-            sigma) + ", learning rate: " + str(eta) + ", Amount of winners: " + str(amt_learn) + "\n Gaussian Noise with SD: " + str(0.1))
+            sigma) + ", learning rate: " + str(eta) + ", Amount of winners: " + str(
+            amt_learn) + "\n Gaussian Noise with SD: " + str(0.1))
         plt.grid()
         plt.show()
     return total_error
@@ -137,15 +145,16 @@ def error_testing(training, testing, target, target_test):
     global nodes
     errors = []
     amt_nodes = []
-    iters = 30
-    for i in range(5, nodes):
+    iters = 10
+    for i in range(5, nodes, 1):
+        print(i)
         sum = 0
         for j in range(iters):
             nodes = i
             weights = competitive_learning(training)
             sum += (network(weights, training, testing, target, target_test))
         amt_nodes.append(i)
-        errors.append(sum/iters)
+        errors.append(sum / iters)
     plot_error(amt_nodes, errors)
 
 
@@ -164,7 +173,7 @@ def read_file_data(filename, noise=noise):
     training = np.asfarray(np.array(list), float)
     training_X, training_Y = np.hsplit(training, 2)
     if noise:
-        training_X += np.random.normal(0, 0.1, [datapoints, feature])
+        training_X += np.random.normal(0, data_noise, [datapoints, feature])
     return training_X, training_Y
 
 
@@ -176,7 +185,7 @@ def weight_plot(training_x):
     plt.ylabel("Velocity")
     plt.title("Weight positioning with " + str(nodes) + " hidden nodes\n, sigma: " + str(
         sigma) + ", learning rate: " + str(eta) + ", Amount of winners: " + str(
-        amt_learn) + ", Gaussian Noise with SD: " + str(noise))
+        amt_learn) + ", Gaussian Noise with SD: " + str(data_noise))
     plt.grid()
     plt.show()
 
@@ -184,8 +193,7 @@ def weight_plot(training_x):
 if __name__ == "__main__":
     training_x, training_y = read_file_data("ballist.dat")
     test_x, test_y = read_file_data("balltest.dat")
-    #error_testing(training_x,test_x,training_y,test_y)
-    weights = competitive_learning(training_x)
-    print(winners)
+    error_testing(training_x, test_x, training_y, test_y)
+    # weights = competitive_learning(training_x)
 
-    #(network(weights, training_x, test_x, training_y, test_y, False))
+    # (network(weights, training_x, test_x, training_y, test_y, True))
