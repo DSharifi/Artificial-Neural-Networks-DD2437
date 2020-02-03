@@ -196,4 +196,4 @@ def task3_2(use_square=False, use_delta=False, use_noise=False, eta=0.01, n_epoc
 #task3_1(True)
 #task3_1(use_square=False)
 task3_2(use_square=False, use_delta=True, use_noise=True, eta=0.01, n_epochs=5000)
-#----------------------------------------#
+#------------------------------------#

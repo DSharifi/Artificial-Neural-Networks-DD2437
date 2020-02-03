@@ -371,39 +371,68 @@ def data_clustering():
         1: "blue",
     }
 
-    color_party = {
-        "grey" : "No p",
-        "blue" : "M",
-        "yellow" : "FP",
-        "red" : "S",
-        "orange" : "V",
-        "green" : "MP",
-        "magenta" : "KD",
-        "cyan" : "C"
+    number_color_district = {
+        0: "#FF0000",
+        1: "#FF0049",
+        2: "#FF008B",
+        3: "#FF00F7",
+        4: "#E400FF",
+        5: "#AA00FF",
+        6: "#6C00FF",
+        7: "#2E00FF",
+        8: "#3E39A0",
+        9: "#7D79D8",
+        10: "#79D3D8",
+        11: "#33E7F2",
+        12: "#33F2B5",
+        13: "#1F7A3F",
+        14: "#164626",
+        15: "#111D15",
+        16: "#CFCF1C",
+        17: "#A0A019",
+        18: "#4F4F16",
+        19: "#E4B633",
+        20: "#DF821F",
+        21: "#874C0E",
+        22: "#7C0E87",
+        23: "#DE95E5",
+        24: "#BDBDBD",
+        25: "#3C6F8A",
+        26: "#BB8ED5",
+        27: "#4E2F61",
+        28: "#7FEEFF"
     }
-    
+
     for data_points in range(positions.shape[0]):
-        #print(positions[data_points, 2])
         color = number_color_party[int(positions_party[data_points, 2])]
-        #print(color)
         plt.scatter(positions[data_points,0],positions_party[data_points,1], color = color)       
     plt.xlim(-0.5, 11.5)
     plt.ylim(-0.5, 11.5)
+    plt.xlabel("X-feature")
+    plt.ylabel("Y-feature")
+    plt.title("Voting with respect to party")
     plt.show()
+
     for data_points in range(positions.shape[0]):
-        #print(positions[data_points, 2])
         color = number_color_sex[int(positions_sex[data_points, 2])]
-        #print(color)
         plt.scatter(positions[data_points,0],positions_sex[data_points,1], color = color)       
     plt.xlim(-0.5, 11.5)
     plt.ylim(-0.5, 11.5)
+    plt.xlabel("X-feature")
+    plt.ylabel("Y-feature")
+    plt.title("Voting with respect to gender")
     plt.show()
-
     
-    #[0-10 i X-axeln, 0-10 i Y-axeln]
-    #print(mp_party)
-    #Färger för dem här!
-    #0=no party, 1='m', 2='fp', 3='s', 4='v', 5='mp', 6='kd', 7='c'
+    for data_points in range(positions.shape[0]):
+        color = number_color_district[int(positions_district[data_points, 2]) - 1]
+        plt.scatter(positions[data_points,0],positions_district[data_points,1], color = color)       
+    plt.xlim(-0.5, 11.5)
+    plt.ylim(-0.5, 11.5)
+    plt.xlabel("X-feature")
+    plt.ylabel("Y-feature")
+    plt.title("Voting with respect to district")
+    plt.show()
+    
   
 
 #---------------------------------------------------#
