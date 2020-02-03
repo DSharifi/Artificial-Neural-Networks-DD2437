@@ -8,13 +8,20 @@ nodes = 100
 sigma = 1
 amt_learn = 10
 eta = 0.5
-noise = False
+noise = True
+ball = True
 winners = np.zeros(nodes)
 if noise:
     data_noise = 0.1
 else:
     data_noise = 0
 
+if ball:
+    datapoints = 100
+    feature = 2
+else:
+    datapoints = 63
+    feature = 1
 
 def find_X_closest(x, W, amt=amt_learn):
     """
@@ -106,7 +113,7 @@ def plot_error(nodes, errors):
     plt.plot(nodes, errors, color="blue", label="Error")
 
     plt.title(
-        "Absolute residual error depending on size of the hidden layer\nfor the ball problem, width=" + str(
+        "Absolute residual error depending on size of the hidden layer\n, width=" + str(
             sigma) + ", Data noise (SD): " + str(data_noise))
     plt.xlabel("Amount of Hidden Nodes")
     plt.ylabel("Absolute residual error")
@@ -119,10 +126,18 @@ def network(weights, training, testing, targets_training, targets_test, plot=Fal
     phi = generate_phi_matrix(weights, training)
     W = least_squares(phi, targets_training)
     phi_test_matrix = generate_phi_matrix(weights, testing)
-    total_error = np.abs(np.linalg.norm(phi_test_matrix @ W - targets_test)).mean()
+    sum = 0
+    total_error = np.linalg.norm(phi_test_matrix@W - targets_test, axis=1).mean()
+    print(total_error)
+
     if plot:
-        plt.scatter(testing, phi_test_matrix @ W, label="Approximate")
-        plt.scatter(testing, targets_test, label="True")
+        if ball:
+            plt.scatter(testing, phi_test_matrix @ W, label="Approximate")
+            plt.scatter(testing, targets_test, label="True")
+        else:
+            plt.plot(testing,targets_test, color="green", label="True")
+            plt.plot(testing,phi_test_matrix@W,color="red", label="Approximated")
+
         # plt.scatter(weights.T[0], weights.T[1], label="weights")
         plt.legend()
         plt.title("RBF Network with Competitive Learning hidden nodes: " + str(nodes) + "\n sigma: " + str(
@@ -145,7 +160,7 @@ def error_testing(training, testing, target, target_test):
     global nodes
     errors = []
     amt_nodes = []
-    iters = 10
+    iters = 3
     for i in range(5, nodes, 1):
         print(i)
         sum = 0
@@ -191,9 +206,12 @@ def weight_plot(training_x):
 
 
 if __name__ == "__main__":
-    training_x, training_y = read_file_data("ballist.dat")
-    test_x, test_y = read_file_data("balltest.dat")
+    if ball:
+        training_x, training_y = read_file_data("ballist.dat")
+        test_x, test_y = read_file_data("balltest.dat")
+    else:
+        training_x, test_x, training_y, square2x_target, test_y, square2x_test_target = r.generate_data(noise)
     error_testing(training_x, test_x, training_y, test_y)
-    # weights = competitive_learning(training_x)
+    weights = competitive_learning(training_x)
 
-    # (network(weights, training_x, test_x, training_y, test_y, True))
+    print((network(weights, training_x, test_x, training_y, test_y, False)))
