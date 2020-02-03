@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import re
+
+count = 0
 
 #---------------------------------------------------#
 #----------Read-in-file-animal-to-matrix------------#
@@ -7,7 +10,7 @@ import matplotlib.pyplot as plt
 #----------- Return: a matrix of size: -------------#
 #------ [file size/numb_of_atr, numb_of_atr] -------#
 #---------------------------------------------------#
-def read_in_file_to_matrix(file_name, n_of_slices):
+def read_in_file_to_matrix(file_name, n_of_slices=1):
     file = open(file_name, "r")
     animal = file.read()
     animal = list(map(int,animal.split(",")))
@@ -20,6 +23,8 @@ def read_in_file_to_matrix_float(file_name, n_of_slices):
     file = open(file_name, "r")
     animal = file.read()
     animal = list(map(float,animal.split(",")))
+    #re.sub(r'\s', '', animal)
+    #animal = animal.translate(None, '\t')
     animal = np.asarray(animal)
     animal = np.reshape(animal,(-1, n_of_slices))
     return animal
@@ -32,6 +37,18 @@ def read_in_file_to_vector(file_name):
     file = open(file_name, "r")
     animal = file.read()
     animal = list(animal.splitlines())
+    animal = np.asarray(animal)
+    return animal
+
+def read_in_file_to_vector_party(file_name):
+    file = open(file_name, "r")
+    animal = file.read()
+    animal = re.sub(r'\t', '', animal)
+    animal = re.sub(r' ', '', animal)
+    #animal = animal.translate(None, '\t ')
+    animal = list(map(int,animal.splitlines()))
+    
+    #re.sub(r'\s', '', animal)
     animal = np.asarray(animal)
     return animal
 
@@ -87,7 +104,8 @@ def neighbourhood(distance_matrix,weight_matrix,step_size,neighbourhood_set,task
     # altr, vi räkna om dist från
     # varje node till den vinnande.
     #--------------------------------
-    
+    #global count
+
     # The winning node & neighbourhood factor
     winner_distance = distance_matrix[0][0]
     winner_index = distance_matrix[1][0]
@@ -97,7 +115,9 @@ def neighbourhood(distance_matrix,weight_matrix,step_size,neighbourhood_set,task
     # Loop thought the other nodes
     # Set a learning rate if they belong 
     # to the neighbourhood.
-    print(distance_matrix.shape)
+    #print(count)
+    #count +=1
+    #print(distance_matrix.shape)
     #while 1 :
     #    1
     if task == "animal":
@@ -126,10 +146,33 @@ def neighbourhood(distance_matrix,weight_matrix,step_size,neighbourhood_set,task
         #elif epoch > 2:
         #    distance_matrix[2][(winner_index-1)%10] = step_size
         #print(epoch)             
+        
         distance_matrix = distance_matrix.T
         distance_matrix = sorted(distance_matrix, key=lambda row: row[0])
         distance_matrix = np.array(distance_matrix).T
-        
+    
+    elif task == "vote":
+        distance_matrix = distance_matrix.T
+        distance_matrix = sorted(distance_matrix, key=lambda row: row[1])
+        distance_matrix = np.array(distance_matrix).T
+
+        for i in range(1, neighbourhood_set + 1):
+            #print("--------- minus ---------")
+            #print(distance_matrix.shape[1])
+            #print("--------- plus ---------")
+            #print(int(winner_index+i)%10)
+            #print("------------------------")
+            distance_matrix[2][int(winner_index-i)%distance_matrix.shape[1]] = step_size
+            distance_matrix[2][int(winner_index+i)%distance_matrix.shape[1]] = step_size
+
+        distance_matrix = distance_matrix.T
+        distance_matrix = sorted(distance_matrix, key=lambda row: row[0])
+        distance_matrix = np.array(distance_matrix).T
+
+        #print(distance_matrix[2])
+        #while 1:
+        #    1
+
     return distance_matrix
 
     
@@ -157,11 +200,10 @@ def update_weights(animal, weight_matrix, distance_matrix):
 #--------------- epochs, l_rate --------------------#
 #------------ Return: A trained model --------------#
 #---------------------------------------------------#
-def train_network(animal_matrix,weight_matrix,neighbourhood_set, number_of_epochs = 20, learning_rate = 0.2):
+def train_network(animal_matrix,weight_matrix,neighbourhood_set, task, number_of_epochs = 20, learning_rate = 0.2):
 
     factor1 = 4
     factor2 = 2
-    task = "tour"
     # Loop the amount epochs 
     for epoch in range(number_of_epochs):
         # Loop thought the amount of aminals
@@ -176,9 +218,11 @@ def train_network(animal_matrix,weight_matrix,neighbourhood_set, number_of_epoch
             #factor1 = factor1 + (epoke+1)
             #factor2 = factor2 + (epoke+1)
             #neighbourhood_set = neighbourhood_set - 2
-            neighbourhood_set = int(neighbourhood_set * (1 - (epoch / number_of_epochs)))
             
+            #print(neighbourhood_set)
             weight_matrix = update_weights(animal_matrix[animal],weight_matrix,distance_matrix)
+
+        neighbourhood_set = int(neighbourhood_set * (1 - (epoch / number_of_epochs)))
 
     return weight_matrix
 
@@ -223,7 +267,7 @@ def animal_species():
     weight_matrix = genereate_weight_matrix(100,84)
 
     neighbourhood_set = int(weight_matrix.shape[0]/2) # 50% of the set as neighbours
-    weight_matrix = train_network(animal_matrix,weight_matrix,neighbourhood_set)
+    weight_matrix = train_network(animal_matrix,weight_matrix,neighbourhood_set, "animal")
 
     pos_vector = test_network(animal_matrix,weight_matrix).reshape(-1,1)
 
@@ -243,7 +287,7 @@ def cyclic_tour():
 
     neighbourhood_set = int(weight_matrix.shape[0]/5) # 20% of the set as neighbours
 
-    weight_matrix = train_network(cities_matrix,weight_matrix,neighbourhood_set)
+    weight_matrix = train_network(cities_matrix,weight_matrix,neighbourhood_set, "tour")
 
     pos_vector = test_network(cities_matrix,weight_matrix).reshape(-1,1)
     
@@ -263,13 +307,111 @@ def cyclic_tour():
     plt.legend(loc="upper right")
     plt.show()
     
-   
-    #print(cities_matrix)
-    return 1
+
+#---------------------------------------------------#
+#-------- 4.3 Data Clustering: Votes of MPs --------#
+#---------------------------------------------------#    
+def data_clustering():
+    vote_matrix = read_in_file_to_matrix_float("data_lab2/votes.dat",31) #349
+    #print(vote_matrix.shape)
+    print(vote_matrix.shape)
+
+    # Coding: 0=no party, 1='m', 2='fp', 3='s', 4='v', 5='mp', 6='kd', 7='c'
+    # Use some color scheme for these different groups   
+    mp_party = read_in_file_to_vector_party("data_lab2/mpparty.dat")
+    
+    # Coding: Male 0, Female 1
+    mp_sex = read_in_file_to_vector_party("data_lab2/mpsex.dat")
+
+    # Coding: District 1-29 
+    mp_district = read_in_file_to_vector_party("data_lab2/mpdistrict.dat")
+
+    # Coding: Names 1-349
+    mp_name = read_in_file_to_vector("data_lab2/mpnames.txt")
+
+    weight_matrix = genereate_weight_matrix(100,31) # Kanske 349 istället för 31
+    
+    neighbourhood_set =  int(weight_matrix.shape[0]/5) # 20% of the set as neighbours
+
+    weight_matrix = train_network(vote_matrix,weight_matrix,neighbourhood_set, "vote")
+
+    pos_vector = test_network(vote_matrix,weight_matrix).reshape(-1,1)
+    
+    positions = np.zeros(pos_vector.shape)
+    positions = np.concatenate((positions,positions),axis=1)
+    
+
+    for index, element in enumerate(pos_vector):
+        positions[index] = [(element // 10) + np.random.normal(0, 0.15), (element% 10) + np.random.normal(0, 0.15)]
+
+    
+    mp_party = mp_party.reshape(-1,1)
+    mp_sex = mp_sex.reshape(-1,1)
+    mp_district = mp_district.reshape(-1,1)
+
+    positions_party = np.concatenate((positions,mp_party),axis=1)
+    positions_sex = np.concatenate((positions,mp_sex),axis=1)
+    positions_district = np.concatenate((positions,mp_district),axis=1)
+    
+
+    #print(positions)
+    number_color_party = {
+        0: "grey",
+        1: "blue",
+        2: "yellow",
+        3: "red",
+        4: "orange",
+        5: "green",
+        6: "magenta",
+        7: "cyan"
+    }
+
+    number_color_sex = {
+        0: "magenta",
+        1: "blue",
+    }
+
+    color_party = {
+        "grey" : "No p",
+        "blue" : "M",
+        "yellow" : "FP",
+        "red" : "S",
+        "orange" : "V",
+        "green" : "MP",
+        "magenta" : "KD",
+        "cyan" : "C"
+    }
+    
+    for data_points in range(positions.shape[0]):
+        #print(positions[data_points, 2])
+        color = number_color_party[int(positions_party[data_points, 2])]
+        #print(color)
+        plt.scatter(positions[data_points,0],positions_party[data_points,1], color = color)       
+    plt.xlim(-0.5, 11.5)
+    plt.ylim(-0.5, 11.5)
+    plt.show()
+    for data_points in range(positions.shape[0]):
+        #print(positions[data_points, 2])
+        color = number_color_sex[int(positions_sex[data_points, 2])]
+        #print(color)
+        plt.scatter(positions[data_points,0],positions_sex[data_points,1], color = color)       
+    plt.xlim(-0.5, 11.5)
+    plt.ylim(-0.5, 11.5)
+    plt.show()
+
+    
+    #[0-10 i X-axeln, 0-10 i Y-axeln]
+    #print(mp_party)
+    #Färger för dem här!
+    #0=no party, 1='m', 2='fp', 3='s', 4='v', 5='mp', 6='kd', 7='c'
+  
+
 #---------------------------------------------------#
 #-------------------Function calls------------------#
 #---------------------------------------------------#
 
 #animal_species()
 
-cyclic_tour()
+#cyclic_tour()
+
+data_clustering()
