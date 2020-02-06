@@ -62,7 +62,6 @@ def generate_inputs_task32(filename=None, slice_at=0):
 
 def data_to_image(data_matrix):
     vector_of_images = np.zeros((data_matrix.shape[0], 32, 32))
-
     for i in range(data_matrix.shape[0]):
         vector_of_images[i] = np.reshape(data_matrix[i], (32 ,-1))
     return vector_of_images

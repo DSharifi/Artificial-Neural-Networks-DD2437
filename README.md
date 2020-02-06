@@ -12,5 +12,8 @@
 ### Lab 2 - Radial Basis Function Network
 - [x] Radial Basis Function Network Models for predicting function values
 - [x] Hybrid Learning, RBF using Competitive Learning at input layer
-- [x] Self-Organizing Maps for unsupervised learning in RBF Networks
 - [x] Applying Competitive Learning for a physical problem (ball throwing)
+- [x] Implementation of Self-Organazing Maps used for unsupervised clustering
+- [x] SOM for clustering animals into groups
+- [x] SOM for finding the shortest cyclic path through cities
+- [x] Using SOM clustering to analyze voting patterns in the Swedish Parlament
