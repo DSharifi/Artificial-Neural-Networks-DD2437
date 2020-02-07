@@ -34,7 +34,7 @@ class Hopfield_Network(object):
 
     def recall_batch(self, test_patterns):
         patterns = test_patterns.copy()
-        patterns = np.dot(patterns, self.W)
+        patterns = np.dot(test_patterns, self.W)
         patterns[patterns >= 0] = 1
         patterns[patterns < 0] = -1
         self.energies.append(self.energy(patterns))
@@ -119,7 +119,7 @@ def plot_energy(energy_list, epochs, attractor_energy):
     }
 
     for i in range(energy_list.shape[0]):
-        plt.plot(iterations, energy_list[i], label="(Recall) Image " + str(i+1), marker=list_sym[i])
+        plt.plot(iterations, energy_list[i], label="(Recall) Image " + str(i+10), marker=list_sym[i])
     
     for i in range(attractor_energy.shape[0]):
         plt.axhline(y=attractor_energy[i], label="(True) Image " + str(i+1), linestyle="-", color=colors[i])
@@ -163,7 +163,7 @@ def task3_23(use_ndr=False, mode="batch"):
     
     attractor_energy = hopfield.energy(train_data)
 
-    epochs = int(np.log2(hopfield.units))
+    epochs = int(np.log2(hopfield.units)) - 9
     
     recall = test_data.copy()
     for epoch in range(epochs):
@@ -179,7 +179,7 @@ def task3_23(use_ndr=False, mode="batch"):
 
     plot_image(recall_images[1])
     
-def plot_convergence(error_list, error_bits_list):
+def plot_convergence(error_list, error_bits_list, image_number):
     for i in range(error_list.shape[0]):
         epochs = 0
         for err in error_list[i]:
@@ -189,25 +189,27 @@ def plot_convergence(error_list, error_bits_list):
         plt.plot(np.arange(epochs), error_list[i][:epochs], label=str(error_bits_list[i]) + " error bits")
     
     plt.legend(loc="upper right")
-    plt.title("Error rate during each epoch depending on the amount of error bits")
+    plt.title("Error rate during each epoch depending on the amount of error bits (Image " + str(image_number) + ")")
     plt.xlabel("Epochs")
     plt.ylabel("Error (bits)")
     plt.show()
 
     
-def task3_4():
+def task3_4(image_number=0, max_iter=25):
     inputs, distorted_inputs = generate_inputs_task32(filename="data_lab3/pict.dat", slice_at=1024)
     
     train_data = np.concatenate((inputs[0].reshape(1, -1), inputs[1].reshape(1, -1), inputs[2].reshape(1, -1)))
 
-    test_data = inputs[0].reshape(1, -1)
+    test_data = inputs[image_number].reshape(1, -1)
     hopfield = Hopfield_Network(units=train_data.shape[1], ndr_weights=False)
     hopfield.store_patterns(train_data)
     """ Applying more and more noise, checking number of epochs until conversion """
     error_bits = np.arange(0, 1024, 50)
     
-    max_epochs = 25
+    max_epochs = max_iter
     error_list = -1 * np.ones((len(error_bits), max_epochs+1))
+    images = data_to_image(train_data)
+    
     for i in range(len(error_bits)):
         epochs = max_epochs
         noise = error_bits[i]
@@ -218,19 +220,19 @@ def task3_4():
         while error > 0.0 and epochs > 0:
             result = hopfield.recall_sequential_random(result)
             epochs -= 1
-            error = np.sum(np.abs(result-train_data[0]))
+            error = np.sum(np.abs(result-train_data[image_number]))
             error = error/2
             print("Error: " + str(error) + ", (" + str(error_bits[i]) + " error bits) \t epoch_number=" + str(max_epochs-epochs))
             error_list[i][max_epochs-epochs] = error
         
-    plot_convergence(error_list, error_bits)
+    plot_convergence(error_list, error_bits, image_number)
     
     #plotting
 
 
 """ Task calls """
 #task3_1()
-#task3_23(use_ndr=False, mode="batch") #TODO: Symmetric matrix
-task3_4()
+#task3_23(use_ndr=False, mode="seq") #TODO: Symmetric matrix
+#task3_4(image_number=2, max_iter=25)
 
 
