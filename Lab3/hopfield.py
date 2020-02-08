@@ -229,7 +229,11 @@ def task3_4(image_number=0, max_iter=25):
     
     #plotting
 
-
+def generate_inputs_task35(size, amount):
+    data = np.ones((amount, size))
+    data = data*np.random.randint(2, size=(amount,size))
+    data[data==0] = -1
+    return data
 """ Task calls """
 #task3_1()
 #task3_23(use_ndr=False, mode="seq") #TODO: Symmetric matrix
