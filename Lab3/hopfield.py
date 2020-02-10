@@ -271,8 +271,12 @@ def task3_5_1():
         plot_energy(energy_list, attractor_energy, epochs, True, (i+1))
         plt.show()
 
-def task3_5_2(patterns=300, units=100, mode="batch", use_noise=False, distortion=0.0):
+def task3_5_2(patterns=300, units=100, mode="batch", use_noise=False, distortion=0.0, bias=False):
     data = generate_inputs_task35(patterns, units)
+    if bias:
+        data = 0.5+np.random.normal(0, 1, (300,100))
+        data[data >= 0] = 1
+        data[data < 0] = -1
     patterns_amt = []
     stable_amt = []
     for i in range(1, 50):
@@ -297,15 +301,19 @@ def task3_5_2(patterns=300, units=100, mode="batch", use_noise=False, distortion
     """ Plotting """
     plt.plot(patterns_amt, stable_amt, label="Capacity", color="green")
     plt.title("Capacity of the hopfield network with " + str(patterns) + " stored patterns and " + str(units) + " units\n (using " + mode + " update) " + \
-        "Distorition: " + str(distortion))
+        "Distorition: " + str(distortion) + ", Bias: " + str(bias))
     plt.xlabel("Amount of Patterns Stored")
     plt.ylabel("Amount of Stable Patterns")
     plt.legend(loc="upper right")
     plt.show()
 
+def task3_6():
+    return
+    
 """ Task calls """
 #task3_1()
 #task3_23(use_ndr=False, mode="seq", epochs=15) #TODO: Symmetric matrix
 #task3_4(image_number=2, max_iter=25)
 #task3_5_1()
-#task3_5_2(patterns=300, units=100, mode="batch", use_noise=True, distortion=0.1)
+#task3_5_2(patterns=300, units=100, mode="seq", use_noise=False, distortion=0.0, bias=True)
+#task3_6()
