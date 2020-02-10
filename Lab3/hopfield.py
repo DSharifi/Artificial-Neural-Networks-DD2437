@@ -235,11 +235,13 @@ def task3_4(image_number=0, max_iter=25):
         
     plot_convergence(error_list, error_bits, image_number)
 
-def generate_inputs_task35(amount, size):
+
+def generate_inputs_task35(size, amount):
     data = np.ones((amount, size))
     data = data*np.random.randint(2, size=(amount,size))
     data[data==0] = -1
     return data
+
 
 def task3_5_1():
     inputs, distorted_inputs = generate_inputs_task32(filename="data_lab3/pict.dat", slice_at=1024)
