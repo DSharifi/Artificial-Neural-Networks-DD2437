@@ -37,14 +37,14 @@ class Hopfield_Network(object):
         patterns = np.dot(test_patterns, self.W)
         patterns[patterns >= 0] = 1
         patterns[patterns < 0] = -1
-        self.energies.append(self.energy(patterns))
+        #self.energies.append(self.energy(patterns))
         return patterns
 
     def store_patterns(self, inputs):
         self.X = inputs
 
         if self.ndr:
-            self.W = np.random.normal(0, 0.1, (self.units, self.units))
+            self.W = np.random.normal(0, 1, (self.units, self.units))
         else:
             self.W = np.zeros([self.units, self.units])
         for pattern in inputs:
@@ -102,7 +102,7 @@ def plot_image(image):
     plt.matshow(image)
     plt.show()
 
-def plot_energy(energy_list, epochs, attractor_energy):
+def plot_energy(energy_list, attractor_energy, epochs, task3_5=False, stored_patterns=0):
     iterations = np.arange(epochs)
     energy_list = np.transpose(energy_list)
     list_sym = {
@@ -114,8 +114,13 @@ def plot_energy(energy_list, epochs, attractor_energy):
         0: "magenta",
         1: "pink",
         2: "blue",
-        3: "red"
-
+        3: "red",
+        4: "#33D7DC",
+        5: "#59DC33",
+        6: "#CADC33",
+        7: "#8C25AD",
+        8: "#58126E",
+        9: "#923754"
     }
 
     for i in range(energy_list.shape[0]):
@@ -124,18 +129,23 @@ def plot_energy(energy_list, epochs, attractor_energy):
     for i in range(attractor_energy.shape[0]):
         plt.axhline(y=attractor_energy[i], label="(True) Image " + str(i+1), linestyle="-", color=colors[i])
     
-    plt.title("Energy for true (fixed) and recall functions every iteration")
+    if task3_5:
+        plt.title("Energy for true (fixed) and recall functions every iteration" + ", stored patterns: " + str(stored_patterns))
+    else:
+        plt.title("Energy for true (fixed) and recall functions every iteration")
     plt.xlabel("Iterations")
     plt.ylabel("Energy")
     plt.legend(loc="upper right")
-    plt.show()
+    if not task3_5:
+        plt.show()
 
-def apply_x_error_bits(test_data, error_bits=0):
+def apply_x_error_bits(units, test_data, error_bits=0):
     pattern = test_data.copy()
-    perm_array = np.random.permutation(1024)
-    idx_array = perm_array[:error_bits]
-    for idx in idx_array:
-        pattern[0][idx] *= -1
+    for i in range(pattern.shape[0]):
+        perm_array = np.random.permutation(units)
+        idx_array = perm_array[:error_bits]
+        for idx in idx_array:
+            pattern[i][idx] *= -1
     
     return pattern
 
@@ -148,7 +158,7 @@ def task3_1():
     recall = hopfield.recall_batch(distorted_inputs)
     return recall
 
-def task3_23(use_ndr=False, mode="batch"):      
+def task3_23(use_ndr=False, mode="batch", epochs=10):      
     #inputs, distorted_inputs = generate_inputs_task31()
     inputs, distorted_inputs = generate_inputs_task32(filename="data_lab3/pict.dat", slice_at=1024)
     
@@ -162,8 +172,6 @@ def task3_23(use_ndr=False, mode="batch"):
     hopfield.store_patterns(train_data)
     
     attractor_energy = hopfield.energy(train_data)
-
-    epochs = int(np.log2(hopfield.units)) - 9
     
     recall = test_data.copy()
     for epoch in range(epochs):
@@ -174,7 +182,7 @@ def task3_23(use_ndr=False, mode="batch"):
         print("Epoch " + str(epoch) + " done")
     energy_list = np.asarray(hopfield.energies, list)
     print(recall.shape)
-    plot_energy(energy_list, epochs, attractor_energy)
+    plot_energy(energy_list, attractor_energy, epochs)
     recall_images = data_to_image(recall)
 
     plot_image(recall_images[1])
@@ -213,7 +221,7 @@ def task3_4(image_number=0, max_iter=25):
     for i in range(len(error_bits)):
         epochs = max_epochs
         noise = error_bits[i]
-        distorted_data = apply_x_error_bits(test_data, error_bits=noise)
+        distorted_data = apply_x_error_bits(hopfield.units, test_data, error_bits=noise)
         error = np.inf
         result = distorted_data.copy()
         error_list[i][0] = error_bits[i]
@@ -226,13 +234,76 @@ def task3_4(image_number=0, max_iter=25):
             error_list[i][max_epochs-epochs] = error
         
     plot_convergence(error_list, error_bits, image_number)
-    
-    #plotting
 
+def generate_inputs_task35(amount, size):
+    data = np.ones((amount, size))
+    data = data*np.random.randint(2, size=(amount,size))
+    data[data==0] = -1
+    return data
+
+def task3_5_1():
+    inputs, distorted_inputs = generate_inputs_task32(filename="data_lab3/pict.dat", slice_at=1024)
+
+    train_data = np.concatenate((inputs[0].reshape(1, -1), inputs[1].reshape(1, -1), inputs[2].reshape(1, -1)))
+
+    distorted_data = np.concatenate((distorted_inputs[0].reshape(1, -1), distorted_inputs[1].reshape(1, -1)))
+
+    total_images = 9
+    
+    max_epochs = 25
+    
+    for i in range(3, total_images):
+        train_data = np.concatenate((train_data, inputs[i].reshape(1, -1)), axis=0)
+        hopfield = Hopfield_Network(units=train_data.shape[1], ndr_weights=False)
+        hopfield.store_patterns(train_data)
+        attractor_energy = hopfield.energy(train_data)
+        epochs = 0
+        recall = distorted_data.copy()
+        while epochs < max_epochs:
+            recall = hopfield.recall_sequential_random(recall)
+            #print("Stored images: " + str(i+1), ", epoch=" + str(epochs), ", error="+str(error))
+            epochs += 1
+            print("Epoch: " + str(epochs))
+
+        energy_list = np.asarray(hopfield.energies, list)
+        plot_energy(energy_list, attractor_energy, epochs, True, (i+1))
+        plt.show()
+
+def task3_5_2(patterns=300, units=100, mode="batch", use_noise=False, distortion=0.0):
+    data = generate_inputs_task35(patterns, units)
+    patterns_amt = []
+    stable_amt = []
+    for i in range(1, 50):
+        new_data = data[:i]
+        hopfield = Hopfield_Network(units=data.shape[1], ndr_weights=False)
+        hopfield.store_patterns(new_data)
+        if use_noise:
+            noisy_data = apply_x_error_bits(new_data.shape[1], new_data, error_bits=int(data.shape[1]*distortion))
+        patterns_amt.append(i)
+        if mode == "seq":
+            recall_result = hopfield.recall_sequential_random(noisy_data if use_noise else new_data)
+        else:
+            recall_result = hopfield.recall_batch(noisy_data if use_noise else new_data)
+        #total_error = (np.sum(np.abs(recall_result-new_data))) / 2
+        print(recall_result.shape)
+        counter = 0
+        for j in range(new_data.shape[0]):
+            if np.array_equal(recall_result[j] - new_data[j], np.zeros(new_data.shape[1])):
+                counter+=1
+        stable_amt.append(counter)
+    
+    """ Plotting """
+    plt.plot(patterns_amt, stable_amt, label="Capacity", color="green")
+    plt.title("Capacity of the hopfield network with " + str(patterns) + " stored patterns and " + str(units) + " units\n (using " + mode + " update) " + \
+        "Distorition: " + str(distortion))
+    plt.xlabel("Amount of Patterns Stored")
+    plt.ylabel("Amount of Stable Patterns")
+    plt.legend(loc="upper right")
+    plt.show()
 
 """ Task calls """
 #task3_1()
-#task3_23(use_ndr=False, mode="seq") #TODO: Symmetric matrix
+#task3_23(use_ndr=False, mode="seq", epochs=15) #TODO: Symmetric matrix
 #task3_4(image_number=2, max_iter=25)
-
-
+#task3_5_1()
+#task3_5_2(patterns=300, units=100, mode="batch", use_noise=True, distortion=0.1)
