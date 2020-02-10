@@ -348,8 +348,8 @@ def generate_inputs_task36(amount, size, activity=0.1):
     return data
 
 
-def task3_6(samples, units, activity=0.1):
-    for bias in range(0,50, 5):
+def task3_6(samples, units, activity=0.5):
+    for bias in range(0,40, 7):
         stable = []
         for act in range(0, int(activity * 100), 1):
             data = generate_inputs_task36(samples, units, act/100)
@@ -377,4 +377,4 @@ def task3_6(samples, units, activity=0.1):
 # task3_4(image_number=2, max_iter=25)
 # task3_5_1()
 # task3_5_2(patterns=300, units=100, mode="seq", use_noise=False, distortion=0.0, bias=True)
-task3_6(100, 50)
+task3_6(100, 14)
