@@ -41,10 +41,9 @@ class Hopfield_Network(object):
         return patterns
 
     def store_patterns(self, inputs):
-        self.X = inputs
-
         if self.ndr:
             self.W = np.random.normal(0, 1, (self.units, self.units))
+            self.W = 0.5 * (self.W + np.transpose(self.W))
         else:
             self.W = np.zeros([self.units, self.units])
         for pattern in inputs:
@@ -56,7 +55,35 @@ class Hopfield_Network(object):
     def energy(self, patterns):         
         return np.array([-0.5*np.dot(np.dot(p.T,self.W),p) for p in patterns])
 
-    
+    def store_patterns_sparse(self, data):
+        p=(1/data.size)*np.sum(data)
+        self.W = np.zeros([self.units,self.units])
+        for i, _ in enumerate(self.W):
+            for j, _ in enumerate(self.W):
+                self.W[i][j] = np.sum((data.T[i]-p) * (data.T[j]-p))
+        self.W /= self.units
+
+
+    #  W = Self.W 
+    def recall_sparse(self, patterns, theta=0.5):
+        x = patterns.copy()
+        
+        for p in range(patterns.shape[0]):
+            for i in range(self.units):
+                sum_un = 0
+                for j in range(self.units):
+                    sum_un += (self.W[i][j] * patterns[p][j]) - theta
+
+                if sum_un < 0:
+                    sum_un = -1
+                else:
+                    sum_un = 1
+
+                x[p][i] = 0.5 + 0.5 * sum_un 
+
+        return x
+
+
     
 def data_file_to_matrix(filename, slice_at):
     file = open(filename, "r")
@@ -307,13 +334,35 @@ def task3_5_2(patterns=300, units=100, mode="batch", use_noise=False, distortion
     plt.legend(loc="upper right")
     plt.show()
 
-def task3_6():
-    return
+def generate_inputs_task36(amount, size , activity=0.1):
+    data = np.random.choice([0, 1], size=(amount,size), p=[1-activity, activity])
+    return data
+
+
+def task3_6(samples, units, activity=0.1):
+    data = generate_inputs_task36(samples, units, activity)
+    hopfield = Hopfield_Network(units=units, ndr_weights=False)
+    hopfield.store_patterns_sparse(data)
+    stable = []
+    theta = []
+    for i in range(0,105,5):
+        counter = 0
+        print(i/100)
+        recalled = hopfield.recall_sparse(data, i/100)
+        for j in range(data.shape[0]):
+            if np.array_equal(recalled[j] - data[j], np.zeros(data.shape[1])):
+                counter+=1
+        stable.append(counter)
+    plt.plot(np.arange(0,105,5)/100, stable)
+    plt.xlabel("Theta")
+    plt.ylabel("Stable Patterns")
+    plt.title("Stable Patterns depending on value of Theta\n " + str(units) + " Units, " + str(samples) + " Samples, " + str(activity*100) + " % average activity")
+    plt.show()
     
 """ Task calls """
 #task3_1()
-#task3_23(use_ndr=False, mode="seq", epochs=15) #TODO: Symmetric matrix
+#task3_23(use_ndr=True, mode="seq", epochs=15) #TODO: Symmetric matrix
 #task3_4(image_number=2, max_iter=25)
 #task3_5_1()
 #task3_5_2(patterns=300, units=100, mode="seq", use_noise=False, distortion=0.0, bias=True)
-#task3_6()
+task3_6(100, 40)
