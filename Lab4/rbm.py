@@ -159,9 +159,10 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below) 
-
-        return np.zeros((n_samples, self.ndim_hidden)), np.zeros((n_samples, self.ndim_hidden))
-
+        
+        probabilities = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
+        samples = sample_binary(probabilities)
+        return probabilities, samples
     def get_v_given_h(self, hidden_minibatch):
 
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
