@@ -85,25 +85,30 @@ class RestrictedBoltzmannMachine():
         print("learning CD1")
 
         n_samples = visible_trainset.shape[0]
+        #v0 = visible_trainset
+        #h0 = np.random.normal(0,1, self.ndim_hidden)
+
         v = visible_trainset
-        v0 = visible_trainset
-        h0 = np.random.normal(0,1, self.ndim_hidden)
         for it in range(n_iterations):
 
             # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
             # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
-            # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
+            # note that inference methods returns both probabilities and activations 
+            # (samples from probablities) and you may have to decide when to use what.
+            old_v = v
+            old_h = h
+
             ph, h = self.get_h_given_v(v)
             pv, v = self.get_v_given_h(h)
             # [TODO TASK 4.1] update the parameters using function 'update_params'
             # visualize once in a while when visible layer is input images
-            self.update_params()
+            
+            self.update_params(old_v, old_h, v, h)
+
             if it % self.rf["period"] == 0 and self.is_bottom:
-                viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
-                       it=it, grid=self.rf["grid"])
+                viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),it=it, grid=self.rf["grid"])
 
             # print progress
-
             if it % self.print_period == 0:
                 print("iteration=%7d recon_loss=%4.4f" % (it, np.linalg.norm(visible_trainset - visible_trainset)))
 
@@ -121,19 +126,20 @@ class RestrictedBoltzmannMachine():
            v_k: activities or probabilities of visible layer
            h_k: activities or probabilities of hidden layer
            all args have shape (size of mini-batch, size of respective layer)
+           
         """
 
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
-
         self.delta_bias_v += 0
-        self.delta_weight_vh += 0
+        self.delta_weight_vh +=   self.learning_rate*()
         self.delta_bias_h += 0
+        
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
         self.bias_h += self.delta_bias_h
 
-        return self.learning_rate*()
+        return 
 
     def get_h_given_v(self, visible_minibatch):
 
@@ -194,6 +200,7 @@ class RestrictedBoltzmannMachine():
             for j in range(0, n_samples):
                 sum += self.weight_vh.T[j] * hidden_minibatch[j]
 
+            
 
         return activation(self.bias_h + sum), np.zeros((n_samples, self.ndim_visible))
 

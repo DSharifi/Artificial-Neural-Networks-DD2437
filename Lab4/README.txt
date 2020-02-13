@@ -25,11 +25,13 @@ t10k-labels-idx1-ubyte	    MNIST test labels
 2. Preliminaries
 ----------------
 
-All the functions and classes needed for the lab are provided as templates, and you will implement them as described in the lab instructions. Before working on the code, it is recommended to execute the run.py and make sure you get the following results.
+All the functions and classes needed for the lab are provided as templates, and you will implement them as described in the lab instructions.
+Before working on the code, it is recommended to execute the run.py and make sure you get the following results.
 
  > mkdir trained_rbm trained_dbn
 
-You will have to create the above directories to store and load trained deep belief net models. The 'trained_rbm' will contain pre-trained rbm stack parameters, and 'trained_dbn' will contain fine-tuned deep belief net parameters. And finally,
+You will have to create the above directories to store and load trained deep belief net models. 
+The 'trained_rbm' will contain pre-trained rbm stack parameters, and 'trained_dbn' will contain fine-tuned deep belief net parameters. And finally,
 
  > python run.py
 
@@ -50,7 +52,8 @@ You will have to create the above directories to store and load trained deep bel
  accuracy = 9.87%
  accuracy = 9.80%
 
-The first part of run.py creates a RestrictedBoltzmannMachine and runs contrastive divergence learning. The reconstruction loss is printed while learning, and the receptive fields are stored as 'rf.<epoch>.png' in the same directory. Since there is no learning implemented yet, you will see the loss to be zero, and receptive fields as random pixels.
+The first part of run.py creates a RestrictedBoltzmannMachine and runs contrastive divergence learning. 
+The reconstruction loss is printed while learning, and the receptive fields are stored as 'rf.<epoch>.png' in the same directory. Since there is no learning implemented yet, you will see the loss to be zero, and receptive fields as random pixels.
 
 The second part of run.py creates a DeepBeliefNet. Make sure that the RBM from previous part works as expected before starting with DBNs. The learning is by greedy layer-wise stacking of RBMS, and the DBN architecture is by default the model discussed in Hinton, Osindero & Teh (2006) with 3 hidden layers. After training, the network is evaluated and the train/test set accuracy is printed. You will see the accuracy is around 10.0%. The network is then run as generative model, and the results of the network generating each digit (from 0 to 9) are stored as videos 'rbms.generate<digit>.mp4' in the same directory.
 
