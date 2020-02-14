@@ -57,10 +57,8 @@ class RestrictedBoltzmannMachine():
         self.learning_rate = 0.01
 
         self.momentum = 0.7
-
-        #self.print_period = 5000
-        self.print_period = 6000
-
+        
+        self.print_period = 5000
 
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
             "period": 5000,  # iteration period to visualize
@@ -69,8 +67,8 @@ class RestrictedBoltzmannMachine():
         }
 
         return
-    def cd1(self, visible_trainset, n_iterations=60000):
-    #def cd1(self, visible_trainset, n_iterations=10000):
+
+    def cd1(self, visible_trainset, n_iterations=15):
 
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
@@ -84,7 +82,7 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_trainset.shape[0]
         # v0 = visible_trainset
         full_swipe = int(n_samples/self.batch_size)
-        
+        use_random = True
 
         for epoch in range(n_iterations):
             viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
@@ -95,12 +93,13 @@ class RestrictedBoltzmannMachine():
             pv, v_k = self.get_v_given_h(h_0)
             print("iteration=%7d recon_loss=%4.4f" % (epoch*full_swipe, np.linalg.norm(visible_trainset - v_k)))
 
+            
             for it in range(full_swipe):
                 start_batch = int(it % (n_samples/self.batch_size))
                 end_batch = int((start_batch+1)*self.batch_size)
-                
                 minibatch = visible_trainset[start_batch*self.batch_size:end_batch, :]
-                
+            
+             
                 
 
                 # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
@@ -120,7 +119,6 @@ class RestrictedBoltzmannMachine():
                 # visualize once in a while when visible layer is input images
 
                 self.update_params(v_0, h_0, v_k, h_k)
-        
         return
 
     def update_params(self, v_0, h_0, v_k, h_k):
@@ -139,10 +137,13 @@ class RestrictedBoltzmannMachine():
         """
 
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
+        #self.learning_rate = np.linalg.norm(self.weight_vh)*0.001
         self.delta_bias_v = self.learning_rate*(np.sum(v_0 - v_k, axis=0))
-        self.delta_weight_vh = self.learning_rate*(np.dot(v_0.T, h_0) - np.dot(v_k.T, h_k))
+        #self.delta_weight_vh = self.learning_rate*(np.dot(v_0.T, h_0) - np.dot(v_k.T, h_k))
+        self.delta_weight_vh = self.learning_rate*((v_0.T@ h_0) - (v_k.T@ h_k))
+        
         self.delta_bias_h = self.learning_rate*(np.sum(h_0 - h_k, axis=0))
-
+        
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
         self.bias_h += self.delta_bias_h
@@ -201,8 +202,6 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
-
-            pass
 
         else:
     
