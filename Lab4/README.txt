@@ -53,13 +53,22 @@ The 'trained_rbm' will contain pre-trained rbm stack parameters, and 'trained_db
  accuracy = 9.80%
 
 The first part of run.py creates a RestrictedBoltzmannMachine and runs contrastive divergence learning. 
-The reconstruction loss is printed while learning, and the receptive fields are stored as 'rf.<epoch>.png' in the same directory. Since there is no learning implemented yet, you will see the loss to be zero, and receptive fields as random pixels.
+The reconstruction loss is printed while learning, and the receptive fields are stored as 'rf.<epoch>.png' in the same directory. 
+Since there is no learning implemented yet, you will see the loss to be zero, and receptive fields as random pixels.
 
-The second part of run.py creates a DeepBeliefNet. Make sure that the RBM from previous part works as expected before starting with DBNs. The learning is by greedy layer-wise stacking of RBMS, and the DBN architecture is by default the model discussed in Hinton, Osindero & Teh (2006) with 3 hidden layers. After training, the network is evaluated and the train/test set accuracy is printed. You will see the accuracy is around 10.0%. The network is then run as generative model, and the results of the network generating each digit (from 0 to 9) are stored as videos 'rbms.generate<digit>.mp4' in the same directory.
+The second part of run.py creates a DeepBeliefNet. Make sure that the RBM from previous part works as expected before starting with DBNs. 
+The learning is by greedy layer-wise stacking of RBMS, and the DBN architecture is by default the model discussed in Hinton, 
+Osindero & Teh (2006) with 3 hidden layers. After training, the network is evaluated and the train/test set accuracy is printed. 
+You will see the accuracy is around 10.0%. The network is then run as generative model, and the results of the network generating 
+each digit (from 0 to 9) are stored as videos 'rbms.generate<digit>.mp4' in the same directory.
 
-The last part of run.py uses the DeepBeliefNet from last part, and fine-tunes the parameters by the wake-sleep algorithm. After training, as in the last part, the train/test set accuracy is printed. The generative model results of each digit (from 0 to 9) are stored as videos 'dbn.generate<digit>.mp4' in the same directory. 
+The last part of run.py uses the DeepBeliefNet from last part, and fine-tunes the parameters by the wake-sleep algorithm. 
+After training, as in the last part, the train/test set accuracy is printed. The generative model results of each digit (from 0 to 9) 
+are stored as videos 'dbn.generate<digit>.mp4' in the same directory. 
 
-The learning methods load the parameters from file by default. If there are no stored parameters, the learning is implemented. When the greedy learning and wake-sleep learning are successful, all the parameters are stored in the directories 'trained_rbm/' and 'trained_dbn/'. Make sure to clear the directories, if you do not want to reuse the parameters. 
+The learning methods load the parameters from file by default. If there are no stored parameters, the learning is implemented. 
+When the greedy learning and wake-sleep learning are successful, all the parameters are stored in the directories 'trained_rbm/' and 'trained_dbn/'. 
+Make sure to clear the directories, if you do not want to reuse the parameters. 
 
 3. Packages for running the code
 --------------------------------
@@ -71,21 +80,28 @@ matplotlib.pyplot (tested on matplotlib 2.2.2)
 matplotlib.animation (tested on matplotlib 2.2.2; used only for recording videos in DBN generative mode)
 struct (used only for loading mnist IDX files)
 
-numpy and matplotlib.pyplot are essential for running the code. If you do not have matplotlib.animaton and struct, you might have to use other alternatives. struct can be replaced with other methods to load the IDX formatted binary files. matplotlib.animation can be replaced with other packages to create videos, or you can skip the videos and just have a collection of images from the generative model.
+numpy and matplotlib.pyplot are essential for running the code. If you do not have matplotlib.animaton and struct, you might have to use other alternatives. 
+struct can be replaced with other methods to load the IDX formatted binary files. matplotlib.animation can be replaced with other packages to create videos,
+ or you can skip the videos and just have a collection of images from the generative model.
 
 4. Implementing the tasks
 -------------------------
 
-The tasks in the lab will involve modifying rbm.py and dbn.py. The util.py contains necessary utility functions that are already implemented, and it is recommended that you read through the functions for your tasks. The run.py is a general wrapper which you might also have to edit based on your needs.
-
-TASK 4.1 Here you will create a Restricted Boltzmann Machine, implement the inference rules, and learn the parameters with contrastive divergence. You would have to work on the following functions :
+The tasks in the lab will involve modifying rbm.py and dbn.py. The util.py contains necessary utility functions that are already implemented, 
+and it is recommended that you read through the functions for your tasks. The run.py is a general wrapper which you might also have to edit based on your needs.
+ d
+TASK 4.1 Here you will create a Restricted Boltzmann Machine, implement the inference rules, and learn the parameters with contrastive divergence. 
+You would have to work on the following functions :
 
  rbm.cd1()   	   	   contrastive-divergence method for computing the gradients of the parameters
  rbm.update_params()	   updates the parameters from the gradients 
  rbm.get_v_given_h()	   computes the visible probabilities and activations samples given hidden activations
  rbm.get_h_given_v()	   computes the hidden probabilities and activations samples given visible activations
 
-TASK 4.2 Here you will create a Deep Belief Net by stacking RBMs, and implement inference rules for the network. Since stacking RBMs on top changes the undirected connections into directed connections, the RBM inference rules no longer hold. You would have to write the new rules, although they are very similar to the old ones. You would have to work on the following functions:
+
+TASK 4.2 Here you will create a Deep Belief Net by stacking RBMs, and implement inference rules for the network.
+ Since stacking RBMs on top changes the undirected connections into directed connections, the RBM inference rules no longer hold. 
+ You would have to write the new rules, although they are very similar to the old ones. You would have to work on the following functions:
 
  dbn.train_greedylayerwise()	method for greedy layer-wise stacking of RBMs
  dbn.recognize()		classification method that takes in images and predicts the labels
