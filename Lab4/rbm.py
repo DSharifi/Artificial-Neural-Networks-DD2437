@@ -113,14 +113,13 @@ class RestrictedBoltzmannMachine():
 
                     ph, h_k = self.get_h_given_v(v_k)
 
-                    pv, v_0 = self.get_v_given_h(h_k)
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
                 # visualize once in a while when visible layer is input images
 
                 ph, h_0 = self.get_h_given_v(minibatch)
 
-                self.update_params(minibatch, h_0, v_k, h_k)
-                new_V[start_batch * self.batch_size:end_batch] = v_0
+                self.update_params(v_0, h_0, v_k, h_k)
+                new_V[start_batch * self.batch_size:end_batch] = v_k
             print("iteration=%7d recon_loss=%4.4f" % (epoch*full_swipe, np.linalg.norm(visible_trainset - new_V)))
 
         return

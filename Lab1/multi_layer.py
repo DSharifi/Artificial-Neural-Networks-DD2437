@@ -97,7 +97,11 @@ def network(X_training, Y_training, X_test, plot=True, regularization=True, hidd
     elapsed_time = time.time() - start_time
 
     yhat = model.predict(X_test)
-    weights, biases = model.layers[0].get_weights()
+    weights = []
+    for m in model.layers[0].get_weights()[0]:
+            weights.append(m)
+    #for m in model.layers[1].get_weights()[0]:
+    #         weights.append(m)
 
     if plot:
         pyplot.title('Learning Curves')
@@ -176,3 +180,6 @@ def takeTime(X_training, Y_training, X_test):
 x = mackey_glass(higher + predict)
 inputs, output = generate_io_data(x)
 training, test, training_T, test_T = split_data(inputs, output)
+yhat, history, w, time = network(training.T,training_T,test.T, False,True)
+print(w)
+plot_histo(w)
