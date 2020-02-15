@@ -42,7 +42,7 @@ class DeepBeliefNet():
 
         self.batch_size = batch_size
         
-        self.n_gibbs_recog = 5
+        self.n_gibbs_recog = 1
         
         self.n_gibbs_gener = 300
         
@@ -65,31 +65,35 @@ class DeepBeliefNet():
         n_labels = true_lbl.shape[1]
         
         vis = true_img # visible layer gets the image data
-        print(true_img)
-        lbl = np.ones(true_lbl.shape)/10. # start the net by telling you know nothing about labels        
-        
+        lbl = np.ones(true_lbl.shape)/10. # start the net by telling you know nothing about labels
+         ### PLOT ALL TRUE IMAGES, WITH TRUE AND PREDICTED LABELS
+        plt.imshow(true_img[0].reshape(28,28)) ### PLOT ALL TRUE IMAGES, WITH TRUE AND PREDICTED LABELS
+        """
         print("vis--hid")
         hidden_layer_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
 
         print("hid--pen")
         pen_layer_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidden_layer_out)[1]
         pen = np.concatenate((pen_layer_out, lbl), axis=1)
-
+        """
         # [TODO TASK 4.2] fix the image data in the visible layer and drive the network bottom to top.
         # In the top RBM, run alternating Gibbs sampling \
         # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
         # NOTE : inferring entire train/test set may require too much compute memory (depends on your system).
         # In that case, divide into mini-batches.
         
-        for _ in range(self.n_gibbs_recog):
+        """for _ in range(self.n_gibbs_recog):
             print("pen+lbl--top")
             top_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(pen)[1]
             pen = self.rbm_stack['pen+lbl--top'].get_v_given_h(top_out)[1]
 
         predicted_lbl = pen[:, -n_labels:]
-            
+       
+       
+
+
         print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl,axis=1)==np.argmax(true_lbl,axis=1))))
-        
+        """
         return
 
     def generate(self,true_lbl,name):
@@ -110,8 +114,8 @@ class DeepBeliefNet():
         ax.set_xticks([]); ax.set_yticks([])
         
         lbl = true_lbl
-        random_img = np.sign(np.random.randn(n_sample, self.sizes['vis']))
-        random_img[random_img == -1] = 0
+        random_img = np.random.randn(n_sample, self.sizes['vis'])
+        random_img[random_img < 0] = 0
 
         hidden_layer_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
         pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidden_layer_out)[1]

@@ -40,10 +40,10 @@ if __name__ == "__main__":
     
     dbn.recognize(test_imgs, test_lbls)
 
-    for digit in range(10):
+    """for digit in range(10):
         digit_1hot = np.zeros(shape=(1,10))
         digit_1hot[0,digit] = 1
-        dbn.generate(digit_1hot, name="rbms")
+        dbn.generate(digit_1hot, name="rbms")"""
 
     ''' fine-tune wake-sleep training '''
     """
