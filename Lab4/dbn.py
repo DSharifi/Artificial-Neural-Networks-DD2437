@@ -42,9 +42,9 @@ class DeepBeliefNet():
 
         self.batch_size = batch_size
         
-        self.n_gibbs_recog = 15
+        self.n_gibbs_recog = 5
         
-        self.n_gibbs_gener = 200
+        self.n_gibbs_gener = 300
         
         self.n_gibbs_wakesleep = 5
 
@@ -65,7 +65,7 @@ class DeepBeliefNet():
         n_labels = true_lbl.shape[1]
         
         vis = true_img # visible layer gets the image data
-        
+        print(true_img)
         lbl = np.ones(true_lbl.shape)/10. # start the net by telling you know nothing about labels        
         
         print("vis--hid")
@@ -110,7 +110,9 @@ class DeepBeliefNet():
         ax.set_xticks([]); ax.set_yticks([])
         
         lbl = true_lbl
-        random_img = np.random.randn(n_sample, self.sizes['vis'])
+        random_img = np.sign(np.random.randn(n_sample, self.sizes['vis']))
+        random_img[random_img == -1] = 0
+
         hidden_layer_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
         pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(hidden_layer_out)[1]
 
@@ -126,9 +128,9 @@ class DeepBeliefNet():
             pen = lbl_in[:, :-n_labels]
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
-            
+
             records.append( [ ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None) ] )
-            
+        
         stitch_video(fig,records).save("%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
             
         return
