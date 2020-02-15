@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     image_size = [28,28]
     train_imgs,train_lbls,test_imgs,test_lbls = read_mnist(dim=image_size, n_train=60000, n_test=10000)
-
+    """
     ''' restricted boltzmann machine '''
     
     print ("\nStarting a Restricted Boltzmann Machine..")
@@ -20,7 +20,7 @@ if __name__ == "__main__":
                                      batch_size=20
     )
     rbm.cd1(visible_trainset=train_imgs, n_iterations=20)
-    
+    """
     ''' deep- belief net '''
 
 
@@ -34,9 +34,9 @@ if __name__ == "__main__":
     
     ''' greedy layer-wise training '''
 
-    dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=2000)
+    dbn.train_greedylayerwise(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=4)
 
-    dbn.recognize(train_imgs, train_lbls)
+    #dbn.recognize(train_imgs, train_lbls)
     
     dbn.recognize(test_imgs, test_lbls)
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         dbn.generate(digit_1hot, name="rbms")
 
     ''' fine-tune wake-sleep training '''
-
+    """
     dbn.train_wakesleep_finetune(vis_trainset=train_imgs, lbl_trainset=train_lbls, n_iterations=2000)
 
     dbn.recognize(train_imgs, train_lbls)
@@ -57,3 +57,4 @@ if __name__ == "__main__":
         digit_1hot = np.zeros(shape=(1,10))
         digit_1hot[0,digit] = 1
         dbn.generate(digit_1hot, name="dbn")
+    """

@@ -85,8 +85,8 @@ class RestrictedBoltzmannMachine():
         use_random = True
 
         for epoch in range(n_iterations):
-            viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
-                it=epoch*full_swipe, grid=self.rf["grid"])
+            #viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
+                #it=epoch*full_swipe, grid=self.rf["grid"])
 
             # print progress
             ph, h_0 = self.get_h_given_v(visible_trainset)
@@ -98,9 +98,6 @@ class RestrictedBoltzmannMachine():
                 start_batch = int(it % (n_samples/self.batch_size))
                 end_batch = int((start_batch+1)*self.batch_size)
                 minibatch = visible_trainset[start_batch*self.batch_size:end_batch, :]
-            
-             
-                
 
                 # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
                 # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
@@ -167,7 +164,6 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below) 
-     
        
         probabilities = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
         samples = sample_binary(probabilities)
@@ -202,9 +198,19 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
+            support = self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T)
+            support[support < -75] = -75
 
+            probabilities = sigmoid(support[:, :-self.n_labels])
+            label_probabilities = softmax(support[:, -self.n_labels:])
+
+            samples = sample_binary(probabilities)
+            label_samples = sample_categorical(label_probabilities)
+            
+            samples = np.concatenate((samples, label_samples), axis=1)
+            probabilities = np.concatenate((probabilities, label_probabilities), axis=1)
+            
         else:
-    
             probabilities = sigmoid(self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T))
             samples = sample_binary(probabilities)
 
@@ -236,8 +242,9 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below) 
-
-        return np.zeros((n_samples, self.ndim_hidden)), np.zeros((n_samples, self.ndim_hidden))
+        probabilities = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_v_to_h))
+        samples = sample_binary(probabilities)
+        return probabilities, samples
 
     def get_v_given_h_dir(self, hidden_minibatch):
 
@@ -269,15 +276,16 @@ class RestrictedBoltzmannMachine():
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
 
+            print("NO DIRECTED CONNECTIONS HERE: ERROR, exit program")
             pass
 
         else:
 
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)             
+            probabilities = sigmoid(self.bias_v + np.dot(hidden_minibatch, self.weight_h_to_v))
+            samples = sample_binary(probabilities)
 
-            pass
-
-        return np.zeros((n_samples, self.ndim_visible)), np.zeros((n_samples, self.ndim_visible))
+        return probabilities, samples
 
     def update_generate_params(self, inps, trgs, preds):
 
