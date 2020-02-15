@@ -20,7 +20,7 @@
 
 
 
-### Lab 4 - Deep Networks
+### Lab 4 - Deep Belief Networks and Restricted Boltzmann Machines
 - [X] Restricted Boltzmann Machines (RBM) with Visible and Hidden layer
 - [x] Alternated Gibbs Sampling in an RBM Network
 - [X] Deep Belief Networks (DBN) using directed RBM's stacked on top of eachother.
