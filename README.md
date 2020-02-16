@@ -18,10 +18,16 @@
 - [x] SOM for finding the shortest cyclic path through cities
 - [x] Using SOM clustering to analyze voting patterns in the Swedish Parlament
 
-
+### Lab 3 - Hopfield Networks (auto-associative network)
+- [x] Convergence and attractors within Hopfield network
+- [x] Sequential and batch update
+- [x] Energy for different states within Hopfield network
+- [x] Distortion resistance
+- [x] The network's capacity management
+- [x] Sparse patterns & bias' in Hopfield networks
 
 ### Lab 4 - Deep Belief Networks and Restricted Boltzmann Machines
-- [X] Restricted Boltzmann Machines (RBM) with Visible and Hidden layer
+- [x] Restricted Boltzmann Machines (RBM) with Visible and Hidden layer
 - [x] Alternated Gibbs Sampling in an RBM Network
 - [X] Deep Belief Networks (DBN) using directed RBM's stacked on top of eachother.
 - [x] DBN for image recognition
