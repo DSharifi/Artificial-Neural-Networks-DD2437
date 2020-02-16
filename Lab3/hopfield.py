@@ -313,7 +313,7 @@ def task3_5_2(patterns=300, units=100, mode="batch", use_noise=False, distortion
         data[data < 0] = -1
     patterns_amt = []
     stable_amt = []
-    for i in range(1, 50):
+    for i in range(1, patterns):
         new_data = data[:i]
         hopfield = Hopfield_Network(units=data.shape[1], ndr_weights=False)
         hopfield.store_patterns(new_data)
@@ -373,8 +373,8 @@ def task3_6(samples, units, activity=0.5):
 
 """ Task calls """
 # task3_1()
-# task3_23(use_ndr=True, mode="seq", epochs=15) #TODO: Symmetric matrix
+# task3_23(use_ndr=True, mode="seq", epochs=15)
 # task3_4(image_number=2, max_iter=25)
 # task3_5_1()
-# task3_5_2(patterns=300, units=100, mode="seq", use_noise=False, distortion=0.0, bias=True)
+#task3_5_2(patterns=100, units=100, mode="seq", use_noise=False, distortion=0.0, bias=False)
 task3_6(100, 14)
