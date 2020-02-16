@@ -44,9 +44,9 @@ class DeepBeliefNet():
 
         self.batch_size = batch_size
 
-        self.n_gibbs_recog = 15
+        self.n_gibbs_recog = 1
 
-        self.n_gibbs_gener = 300
+        self.n_gibbs_gener = 1000
 
         self.n_gibbs_wakesleep = 15
 
@@ -67,8 +67,7 @@ class DeepBeliefNet():
 
         vis = true_img  # visible layer gets the image data
         lbl = np.ones(true_lbl.shape) / 10.  # start the net by telling you know nothing about labels
-
-        #images(true_img,50)
+        print(true_img[true_img >0])
 
         print("vis--hid")
         hidden_layer_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
@@ -90,7 +89,11 @@ class DeepBeliefNet():
             pen = self.rbm_stack['pen+lbl--top'].get_v_given_h(top_out)[1]
 
         predicted_lbl = pen[:, -n_labels:]
-        print(predicted_lbl)
+        predicted_list = []
+        for p_l in predicted_lbl:
+            predicted_list.append(np.where(p_l==1)[0])
+        plot_images(true_img, np.array(predicted_list))
+
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
         return
 
@@ -123,7 +126,7 @@ class DeepBeliefNet():
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
 
         lbl_in = np.concatenate((pen_out, lbl), axis=1)
-        for _ in range(self.n_gibbs_gener):
+        for i in range(self.n_gibbs_gener):
             lbl_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(lbl_in)[1]
             lbl_in = self.rbm_stack['pen+lbl--top'].get_v_given_h(lbl_out)[1]
             lbl_in[:, -n_labels:] = lbl[:, :]
@@ -132,11 +135,13 @@ class DeepBeliefNet():
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
 
-            records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
-                                      interpolation=None)])
+            #records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
+            #                          interpolation=None)])
+            if i % 100 ==0:
+                records.append(vis)
 
-        stitch_video(fig, records).save("%s.generate%d.mp4" % (name, np.argmax(true_lbl)))
-
+        #stitch_video(fig, records).save("%s.generate%d.mp4" % (name, np.argmax(true_lbl)))
+        plot_images(np.array(records), np.arange(0,10)[int((np.where(true_lbl==1))[0])]*np.ones(len((records))))
         return
 
     def train_greedylayerwise(self, vis_trainset, lbl_trainset, n_iterations):
@@ -224,8 +229,8 @@ class DeepBeliefNet():
             self.n_samples = vis_trainset.shape[0]
             n_labels = lbl_trainset.shape[1]
             full_swipe = int(self.n_samples/self.batch_size)
-            self.rbm_stack['vis--hid'].untwine_weights()
-            self.rbm_stack['hid--pen'].untwine_weights()
+            #self.rbm_stack['vis--hid'].untwine_weights()
+            #self.rbm_stack['hid--pen'].untwine_weights()
             for epoch in range(n_iterations):
                 print("Starting epoch " + str(epoch) + "...")
                 for it in range(full_swipe):
