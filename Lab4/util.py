@@ -100,6 +100,17 @@ def read_mnist(dim=[28,28],n_train=60000,n_test=1000):
 
     return train_imgs[:n_train],train_lbls_1hot[:n_train],test_imgs[:n_test],test_lbls_1hot[:n_test]
 
+def images(img, max=30):
+    if img.shape[0] > max:
+        img = img[0:max]
+    fig = plt.figure(figsize=(28, 28))
+    rows = int(img.shape[0] / 10)
+    columns = 10
+    for i in range(1, rows * columns + 1):
+        fig.add_subplot(rows, columns, i)
+        plt.imshow(img[i - 1].reshape(28, 28))
+    plt.show()
+
 def viz_rf(weights,it,grid):
 
     """
