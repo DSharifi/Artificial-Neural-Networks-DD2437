@@ -44,7 +44,7 @@ class DeepBeliefNet():
 
         self.batch_size = batch_size
 
-        self.n_gibbs_recog = 1
+        self.n_gibbs_recog = 5
 
         self.n_gibbs_gener = 1000
 
@@ -264,8 +264,10 @@ class DeepBeliefNet():
                     # activations.
                     # Note that these predictions will not alter the network activations, 
                     # we use them only to learn the directed connections.
-                    psleeppenstates, psleeppenprobs = self.rbm_stack['hid--pen'].get_h_given_v_dir(sleephidstates)
-                    psleephidstates, psleephidprobs = self.rbm_stack['vis--hid'].get_h_given_v_dir(sleepvisprobs)
+                    
+                    
+                    psleeppenprobs, psleeppenstates = self.rbm_stack['hid--pen'].get_h_given_v_dir(sleephidstates)
+                    psleephidprobs, psleephidstates = self.rbm_stack['vis--hid'].get_h_given_v_dir(sleepvisprobs)
                     pvisprobs, pvisstates = self.rbm_stack['vis--hid'].get_v_given_h_dir(wakehidstates)
                     phidprobs, phidstates = self.rbm_stack['hid--pen'].get_v_given_h_dir(wakepenstates)
                     
@@ -281,8 +283,8 @@ class DeepBeliefNet():
                     
                     # [TODO TASK 4.3] update generative parameters : here you will only use 
                     # 'update_recognize_params' method from rbm class.
-                    self.rbm_stack['hid--pen'].update_recognize_params(sleephidstates, sleeppenstates, psleeppenprobs)
-                    self.rbm_stack['vis--hid'].update_recognize_params(sleepvisprobs, sleephidstates, psleephidprobs)
+                    self.rbm_stack['hid--pen'].update_recognize_params(sleephidstates, sleeppenstates, psleeppenstates)
+                    self.rbm_stack['vis--hid'].update_recognize_params(sleepvisprobs, sleephidstates, psleephidstates)
 
                     if it % self.print_period == 0: print("(Task4.3)iteration=%7d of %7d" % (it, full_swipe))
                 
