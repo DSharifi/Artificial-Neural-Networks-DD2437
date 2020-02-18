@@ -117,6 +117,7 @@ class DeepBeliefNet():
 
         lbl = true_lbl
         random_img = np.random.randn(n_sample, self.sizes['vis'])
+        random_img[random_img > 1] = 1
         random_img[random_img < 0] = 0
 
         hidden_layer_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
@@ -156,7 +157,7 @@ class DeepBeliefNet():
           lbl_trainset: label data shaped (size of training set, size of label layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
-
+        layer_records = np.zeros((3, n_iterations))
         try:
 
             self.loadfromfile_rbm(loc="trained_rbm", name="vis--hid")
@@ -174,7 +175,7 @@ class DeepBeliefNet():
             """ 
             CD-1 training for vis--hid
             """
-            self.rbm_stack['vis--hid'].cd1(vis_trainset, n_iterations)
+            layer_records[0] = self.rbm_stack['vis--hid'].cd1(vis_trainset, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
 
             print("training hid--pen")
@@ -187,7 +188,7 @@ class DeepBeliefNet():
             CD-1 training for hid--pen
             """
 
-            self.rbm_stack['hid--pen'].cd1(inp, n_iterations)
+            layer_records[1] = self.rbm_stack['hid--pen'].cd1(inp, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
 
             print("training pen+lbl--top")
@@ -199,10 +200,10 @@ class DeepBeliefNet():
             CD-1 training for pen+lbl--top 
             """
 
-            self.rbm_stack['pen+lbl--top'].cd1(out, n_iterations)
+            layer_records[2] = self.rbm_stack['pen+lbl--top'].cd1(out, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
-        return
+        return layer_records
 
     def train_wakesleep_finetune(self, vis_trainset, lbl_trainset, n_iterations):
 

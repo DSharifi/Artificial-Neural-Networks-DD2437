@@ -84,15 +84,14 @@ class RestrictedBoltzmannMachine():
         full_swipe = int(n_samples/self.batch_size)
         use_random = True
 
+        records = np.zeros(n_iterations)
+
         for epoch in range(n_iterations):
+            print("Epoch " + str(epoch) + ", hidden nodes= " + str(self.ndim_hidden))
             #viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
                 #it=epoch*full_swipe, grid=self.rf["grid"])
 
             # print progress
-            ph, h_0 = self.get_h_given_v(visible_trainset)
-            pv, v_k = self.get_v_given_h(h_0)
-            print("iteration=%7d recon_loss=%4.4f" % (epoch*full_swipe, np.linalg.norm(visible_trainset - v_k)))
-
             
             for it in range(full_swipe):
                 start_batch = int(it % (n_samples/self.batch_size))
@@ -116,7 +115,15 @@ class RestrictedBoltzmannMachine():
                 # visualize once in a while when visible layer is input images
 
                 self.update_params(v_0, h_0, v_k, h_k)
-        return
+            
+            #reconstruction loss
+            ph, h_0 = self.get_h_given_v(visible_trainset)
+            pv, v_k = self.get_v_given_h(h_0)
+            recon_loss = np.linalg.norm(visible_trainset - v_k)
+            print("iteration=%7d recon_loss=%4.4f" % (epoch*full_swipe, recon_loss))
+            records[epoch] = recon_loss
+
+        return records
 
     def update_params(self, v_0, h_0, v_k, h_k):
 
