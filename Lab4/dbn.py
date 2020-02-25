@@ -267,7 +267,7 @@ class DeepBeliefNet():
 
                     pen_states_labels = np.concatenate((wakepenstates, label_minibatch), axis=1)
                     self.rbm_stack['pen+lbl--top'].update_params(pen_states_labels, waketopstates, negpenstates, negtopstates)
-            
+
                     self.rbm_stack['hid--pen'].update_recognize_params(sleephidstates, sleeppenstates, psleeppenstates)
                     self.rbm_stack['vis--hid'].update_recognize_params(sleepvisprobs, sleephidstates, psleephidstates)
 
